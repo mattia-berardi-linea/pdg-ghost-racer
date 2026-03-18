@@ -19,6 +19,7 @@ interface RaceStore {
   intensity: number; // -50 to +50
   conditions: number; // -30 | 0 | +30
   transitions: Record<string, number>; // checkpointId → minutes
+  targetTotalMs: number | null; // manual total-time override; null = use calculated value
 
   // --- Computed ---
   normalizedProfile: NormalizedProfile;
@@ -38,6 +39,7 @@ interface RaceStore {
   setIntensity: (value: number) => void;
   setConditions: (value: number) => void;
   setTransition: (checkpointId: string, minutes: number) => void;
+  setTargetTotalMs: (ms: number | null) => void;
   setNormalizedProfile: (profile: NormalizedProfile) => void;
   setCourseSegments: (segments: CourseSegment[]) => void;
   setReferenceZoneSpeeds: (speeds: Record<SlopeZone, number>) => void;
@@ -54,6 +56,7 @@ export const useRaceStore = create<RaceStore>((set) => ({
   intensity: 0,
   conditions: 0,
   transitions: buildDefaultTransitions(),
+  targetTotalMs: null,
 
   normalizedProfile: DEFAULT_PROFILE,
   courseSegments: null,
@@ -78,6 +81,7 @@ export const useRaceStore = create<RaceStore>((set) => ({
   setStartTime: (time) => set({ startTime: time }),
   setIntensity: (value) => set({ intensity: Math.max(-50, Math.min(50, value)) }),
   setConditions: (value) => set({ conditions: value }),
+  setTargetTotalMs: (ms) => set({ targetTotalMs: ms }),
 
   setTransition: (checkpointId, minutes) =>
     set((state) => ({

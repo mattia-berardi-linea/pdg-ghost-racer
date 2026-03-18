@@ -35,6 +35,7 @@ export function usePdGCalculator() {
   const intensity = useRaceStore((s) => s.intensity);
   const conditions = useRaceStore((s) => s.conditions);
   const transitions = useRaceStore((s) => s.transitions);
+  const targetTotalMs = useRaceStore((s) => s.targetTotalMs);
 
   const setNormalizedProfile = useRaceStore((s) => s.setNormalizedProfile);
   const setReferenceZoneSpeeds = useRaceStore((s) => s.setReferenceZoneSpeeds);
@@ -111,6 +112,7 @@ export function usePdGCalculator() {
         conditionsFactor: 1 + conditions / 100,
         transitions,
         activityDurationMs: normalizedProfile.activityDurationMs,
+        targetTotalMs: targetTotalMs ?? undefined,
       },
     }).then((res) => {
       if (res.type === 'SIMULATION_RESULT') {
@@ -122,5 +124,5 @@ export function usePdGCalculator() {
       }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [normalizedProfile, courseSegments, startTime, intensity, conditions, transitions]);
+  }, [normalizedProfile, courseSegments, startTime, intensity, conditions, transitions, targetTotalMs]);
 }

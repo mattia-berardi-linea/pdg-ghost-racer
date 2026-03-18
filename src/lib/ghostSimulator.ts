@@ -60,6 +60,12 @@ function estimateRawDuration(
   return elapsedMs;
 }
 
+const ZONES: SlopeZone[] = ['steep_climb', 'moderate_climb', 'flat', 'descent'];
+
+function computeTransitionMs(checkpoints: CheckpointDef[], transitions: Record<string, number>): number {
+  return checkpoints.reduce((sum, cp) => sum + (transitions[cp.id] ?? cp.defaultTransitionMin) * 60000, 0);
+}
+
 export function runSimulation(payload: SimulatePayload): SimulationResult {
   const {
     profile,
@@ -70,6 +76,7 @@ export function runSimulation(payload: SimulatePayload): SimulationResult {
     conditionsFactor,
     transitions,
     activityDurationMs,
+    targetTotalMs,
   } = payload;
 
   // Apply durability factor when uploaded activities are shorter than 2h
@@ -78,11 +85,30 @@ export function runSimulation(payload: SimulatePayload): SimulationResult {
     const T_raw = estimateRawDuration(courseSegments, profile.zoneSpeedMs, intensityFactor, conditionsFactor, transitions, checkpoints);
     const ratio = T_raw / activityDurationMs;
     const factor = Math.min(Math.pow(ratio, DURABILITY_BETA), DURABILITY_CAP);
-    const zones: SlopeZone[] = ['steep_climb', 'moderate_climb', 'flat', 'descent'];
     effectiveZoneSpeeds = {} as Record<SlopeZone, number>;
-    for (const z of zones) {
+    for (const z of ZONES) {
       effectiveZoneSpeeds[z] = profile.zoneSpeedMs[z] / factor;
     }
+  }
+
+  // Apply target total time override: back-calculate a global speed multiplier so the
+  // simulation produces exactly targetTotalMs. Intensity + conditions are baked in.
+  let finalIntensityFactor = intensityFactor;
+  let finalConditionsFactor = conditionsFactor;
+  if (targetTotalMs != null && targetTotalMs > 0) {
+    const transitionMs = computeTransitionMs(checkpoints, transitions);
+    const firstPassTotal = estimateRawDuration(courseSegments, effectiveZoneSpeeds, intensityFactor, conditionsFactor, transitions, checkpoints);
+    const firstPassMovingMs = Math.max(firstPassTotal - transitionMs, 1);
+    const targetMovingMs = Math.max(targetTotalMs - transitionMs, 1);
+    const adjustment = firstPassMovingMs / targetMovingMs;
+    // Bake intensity + conditions + adjustment into zone speeds so the main loop uses factor=1
+    const adjusted = {} as Record<SlopeZone, number>;
+    for (const z of ZONES) {
+      adjusted[z] = effectiveZoneSpeeds[z] * intensityFactor * conditionsFactor * adjustment;
+    }
+    effectiveZoneSpeeds = adjusted;
+    finalIntensityFactor = 1.0;
+    finalConditionsFactor = 1.0;
   }
 
   const startMs = parseStartTimeMs(startTimeStr);
@@ -114,7 +140,7 @@ export function runSimulation(payload: SimulatePayload): SimulationResult {
   for (const segment of courseSegments) {
     const baseSpeed = effectiveZoneSpeeds[segment.zone];
     const effectiveSpeed =
-      baseSpeed * segment.altitudePenaltyFactor * intensityFactor * conditionsFactor;
+      baseSpeed * segment.altitudePenaltyFactor * finalIntensityFactor * finalConditionsFactor;
 
     // Guard against zero/negative speed
     const safeSpeed = Math.max(effectiveSpeed, 0.1);

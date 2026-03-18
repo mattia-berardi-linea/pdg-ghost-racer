@@ -40,7 +40,7 @@ export default function RaceMap() {
 
     const map = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/dark-v11',
+      style: 'mapbox://styles/mapbox/outdoors-v12',
       bounds: COURSE_BOUNDS,
       fitBoundsOptions: { padding: 60 },
     });
@@ -55,9 +55,9 @@ export default function RaceMap() {
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      background: #ffffff;
-      border: 3px solid #60a5fa;
-      box-shadow: 0 0 0 4px rgba(96,165,250,0.3), 0 0 14px 4px rgba(96,165,250,0.5);
+      background: #1d4ed8;
+      border: 3px solid #ffffff;
+      box-shadow: 0 0 0 3px rgba(29,78,216,0.5), 0 2px 8px rgba(0,0,0,0.4);
       pointer-events: none;
       z-index: 10;
     `;
@@ -91,13 +91,13 @@ export default function RaceMap() {
         id: 'course-glow',
         type: 'line',
         source: 'course',
-        paint: { 'line-color': '#3b82f6', 'line-width': 8, 'line-opacity': 0.2, 'line-blur': 4 },
+        paint: { 'line-color': '#ef4444', 'line-width': 7, 'line-opacity': 0.25, 'line-blur': 3 },
       });
       map.addLayer({
         id: 'course-line',
         type: 'line',
         source: 'course',
-        paint: { 'line-color': '#60a5fa', 'line-width': 2.5, 'line-opacity': 0.9 },
+        paint: { 'line-color': '#ef4444', 'line-width': 2.5, 'line-opacity': 0.95 },
       });
     };
 

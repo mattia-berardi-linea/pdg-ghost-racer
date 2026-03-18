@@ -112,6 +112,7 @@ export interface SimulatePayload {
   conditionsFactor: number; // 0.7 – 1.3
   transitions: Record<string, number>; // checkpointId → minutes
   activityDurationMs: number; // moving time of the user's uploaded activities; 0 = no uploads
+  targetTotalMs?: number; // if set, override total race time; speeds are back-calculated to match
 }
 
 export interface NormalizePayload {
