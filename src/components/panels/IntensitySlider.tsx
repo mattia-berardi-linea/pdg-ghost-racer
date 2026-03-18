@@ -13,16 +13,19 @@ export default function IntensitySlider() {
       ? `+${intensity}% faster than training`
       : `${intensity}% slower than training`;
 
-  const color =
-    intensity > 20 ? '#ef4444' : intensity > 0 ? '#f59e0b' : intensity < -20 ? '#3b82f6' : '#22c55e';
+  const valueColor =
+    intensity > 20 ? 'var(--alpine-500)'
+    : intensity > 0 ? 'var(--sunset-gold)'
+    : intensity < -20 ? 'var(--glacier-400)'
+    : 'var(--mountain-green)';
 
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <label className="text-xs font-semibold text-gray-300 uppercase tracking-wider">
+        <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--stone-400)' }}>
           Intensity
         </label>
-        <span className="text-xs font-mono" style={{ color }}>
+        <span className="text-xs font-mono font-semibold" style={{ color: valueColor }}>
           {intensity > 0 ? `+${intensity}` : intensity}%
         </span>
       </div>
@@ -33,14 +36,15 @@ export default function IntensitySlider() {
         step={5}
         value={intensity}
         onChange={(e) => setIntensity(Number(e.target.value))}
-        className="w-full accent-blue-400 cursor-pointer"
+        className="w-full cursor-pointer"
+        style={{ accentColor: 'var(--glacier-400)' }}
       />
-      <div className="flex justify-between text-xs text-gray-600">
+      <div className="flex justify-between text-xs" style={{ color: 'var(--stone-500)' }}>
         <span>-50% (easy)</span>
         <span>0</span>
         <span>+50% (max)</span>
       </div>
-      <p className="text-xs text-gray-500">{label}</p>
+      <p className="text-xs" style={{ color: 'var(--stone-500)' }}>{label}</p>
     </div>
   );
 }

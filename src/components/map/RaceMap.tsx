@@ -206,18 +206,18 @@ function findNearestTimelinePoint(
 }
 
 function buildPopupHTML(name: string, result?: CheckpointResult): string {
-  if (!result) return `<div style="font-family:monospace;font-size:12px;color:#e5e7eb;background:#1f2937;padding:8px;border-radius:6px">${name}</div>`;
+  if (!result) return `<div style="font-family:'Barlow',sans-serif;font-size:12px;color:#d1d5db;background:#0f1f35;padding:10px;border-radius:8px;border:1px solid #253752">${name}</div>`;
   const bufferStr =
     result.bufferMin !== null
       ? result.isDQ
-        ? `<span style="color:#ef4444">✗ DQ</span>`
-        : `<span style="color:${result.bufferMin < 30 ? '#f59e0b' : '#22c55e'}">+${Math.round(result.bufferMin)}m buffer</span>`
+        ? `<span style="color:#e56b5a">✗ DQ</span>`
+        : `<span style="color:${result.bufferMin < 30 ? '#fbbf24' : '#4ade80'}">+${Math.round(result.bufferMin)}m buffer</span>`
       : '';
   return `
-    <div style="font-family:monospace;font-size:12px;color:#e5e7eb;background:#1f2937;padding:8px;border-radius:6px;min-width:140px">
-      <div style="font-weight:700;margin-bottom:4px">${name}</div>
-      <div>Arrival: <b>${result.arrivalClock}</b></div>
-      ${result.cutoffClock ? `<div>Cut-off: <b>${result.cutoffClock}</b></div>` : ''}
-      ${bufferStr ? `<div>${bufferStr}</div>` : ''}
+    <div style="font-family:'Barlow',sans-serif;font-size:12px;color:#d1d5db;background:#0f1f35;padding:10px;border-radius:8px;border:1px solid #253752;min-width:148px;box-shadow:0 4px 16px rgba(0,0,0,0.4)">
+      <div style="font-weight:700;margin-bottom:5px;color:#ffffff;font-size:13px">${name}</div>
+      <div style="color:#9ca3af">Arrival: <span style="color:#d1d5db;font-weight:600">${result.arrivalClock}</span></div>
+      ${result.cutoffClock ? `<div style="color:#9ca3af">Cut-off: <span style="color:#d1d5db;font-weight:600">${result.cutoffClock}</span></div>` : ''}
+      ${bufferStr ? `<div style="margin-top:4px">${bufferStr}</div>` : ''}
     </div>`;
 }

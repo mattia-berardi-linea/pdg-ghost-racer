@@ -1,13 +1,41 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap');
 
 :root {
-  --background: #030712;
+  /* Deep Navy */
+  --navy-950: #0a1628;
+  --navy-900: #0f1f35;
+  --navy-800: #1a2942;
+  --navy-700: #253752;
+  --navy-600: #374a66;
+
+  /* Glacier Blue */
+  --glacier-500: #5ba5d6;
+  --glacier-400: #7eb9e0;
+  --glacier-300: #a1ccea;
+
+  /* Alpine Coral */
+  --alpine-600: #d64f3d;
+  --alpine-500: #e56b5a;
+  --alpine-400: #ef8879;
+
+  /* Mountain Stone */
+  --stone-500: #6b7280;
+  --stone-400: #9ca3af;
+  --stone-300: #d1d5db;
+
+  /* Functional */
+  --mountain-green: #4ade80;
+  --sunset-gold:    #fbbf24;
+
+  --background: var(--navy-950);
   --foreground: #f9fafb;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  font-family: 'Barlow', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* Mapbox popup override */
@@ -23,24 +51,24 @@ body {
 
 /* Checkpoint pulse animations */
 @keyframes pulse-ok {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); }
-  50% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.6); }
+  50%       { box-shadow: 0 0 0 8px rgba(74, 222, 128, 0); }
 }
 @keyframes pulse-tight {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
-  50% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7); }
+  50%       { box-shadow: 0 0 0 10px rgba(251, 191, 36, 0); }
 }
 @keyframes pulse-dq {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8); }
-  50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(214, 79, 61, 0.8); }
+  50%       { box-shadow: 0 0 0 10px rgba(214, 79, 61, 0); }
 }
 @keyframes pulse-none {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(107, 114, 128, 0.4); }
-  50% { box-shadow: 0 0 0 6px rgba(107, 114, 128, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(91, 165, 214, 0.3); }
+  50%       { box-shadow: 0 0 0 6px rgba(91, 165, 214, 0); }
 }
 
 /* Scrollbar styling */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: #111827; }
-::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+::-webkit-scrollbar       { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--navy-900); }
+::-webkit-scrollbar-thumb { background: var(--navy-700); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--navy-600); }

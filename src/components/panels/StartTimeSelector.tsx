@@ -8,7 +8,7 @@ export default function StartTimeSelector() {
 
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-semibold text-gray-300 uppercase tracking-wider block">
+      <label className="text-xs font-semibold uppercase tracking-wider block" style={{ color: 'var(--stone-400)' }}>
         Start Time
       </label>
       <div className="flex items-center gap-2">
@@ -16,9 +16,15 @@ export default function StartTimeSelector() {
           type="time"
           value={startTime}
           onChange={(e) => setStartTime(e.target.value)}
-          className="bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-white text-sm font-mono w-28 focus:outline-none focus:border-blue-400"
+          className="rounded px-2 py-1.5 text-white text-sm font-mono w-28 outline-none border"
+          style={{
+            background: 'var(--navy-800)',
+            borderColor: 'var(--navy-700)',
+          }}
+          onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--glacier-500)')}
+          onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--navy-700)')}
         />
-        <span className="text-gray-500 text-xs">Wave start (default 22:45)</span>
+        <span className="text-xs" style={{ color: 'var(--stone-500)' }}>Wave start (default 22:45)</span>
       </div>
     </div>
   );

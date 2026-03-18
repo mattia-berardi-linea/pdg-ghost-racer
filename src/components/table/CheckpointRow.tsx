@@ -16,17 +16,31 @@ export default function CheckpointRow({ result }: Props) {
   const isSelected = selectedId === cp.id;
   const hasCutoff = cp.cutoffType !== 'none';
 
-  const bufferColor = isDQ
-    ? 'text-red-400'
+  const dotColor = !hasCutoff
+    ? 'var(--navy-600)'
+    : isDQ
+    ? 'var(--alpine-500)'
     : bufferMin !== null && bufferMin < 30
-    ? 'text-amber-400'
-    : 'text-green-400';
+    ? 'var(--sunset-gold)'
+    : 'var(--mountain-green)';
+
+  const bufferColor = isDQ
+    ? 'var(--alpine-400)'
+    : bufferMin !== null && bufferMin < 30
+    ? 'var(--sunset-gold)'
+    : 'var(--mountain-green)';
 
   const bufferBg = isDQ
-    ? 'bg-red-900/40 border-red-700/50'
+    ? 'rgba(214,79,61,0.15)'
     : bufferMin !== null && bufferMin < 30
-    ? 'bg-amber-900/30 border-amber-700/50'
-    : 'bg-green-900/20 border-green-800/30';
+    ? 'rgba(251,191,36,0.12)'
+    : 'rgba(74,222,128,0.1)';
+
+  const bufferBorder = isDQ
+    ? 'rgba(214,79,61,0.3)'
+    : bufferMin !== null && bufferMin < 30
+    ? 'rgba(251,191,36,0.3)'
+    : 'rgba(74,222,128,0.25)';
 
   const handleClick = () => {
     selectCheckpoint(isSelected ? null : cp.id);
@@ -36,27 +50,33 @@ export default function CheckpointRow({ result }: Props) {
   return (
     <tr
       onClick={handleClick}
-      className={`
-        border-b border-gray-800/60 cursor-pointer transition-colors
-        ${isSelected ? 'bg-blue-900/20' : 'hover:bg-gray-800/40'}
-      `}
+      className="border-b cursor-pointer transition-colors"
+      style={{
+        borderColor: 'var(--navy-800)',
+        background: isSelected ? 'rgba(91,165,214,0.08)' : undefined,
+      }}
+      onMouseEnter={(e) => {
+        if (!isSelected) (e.currentTarget as HTMLTableRowElement).style.background = 'rgba(26,41,66,0.6)';
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLTableRowElement).style.background = isSelected ? 'rgba(91,165,214,0.08)' : '';
+      }}
     >
       {/* Name + distance */}
       <td className="py-2 px-3 whitespace-nowrap">
         <div className="flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-            !hasCutoff ? 'bg-gray-600' :
-            isDQ ? 'bg-red-500' :
-            bufferMin !== null && bufferMin < 30 ? 'bg-amber-400' : 'bg-green-500'
-          }`} />
+          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: dotColor }} />
           <div>
-            <div className={`text-sm font-medium ${hasCutoff ? 'text-white' : 'text-gray-400'}`}>
+            <div
+              className="text-sm font-medium"
+              style={{ color: hasCutoff ? 'white' : 'var(--stone-400)' }}
+            >
               {cp.name}
               {cp.isExitCutoff && (
-                <span className="ml-1 text-red-400 text-xs font-normal">[EXIT]</span>
+                <span className="ml-1 text-xs font-normal" style={{ color: 'var(--alpine-400)' }}>[EXIT]</span>
               )}
             </div>
-            <div className="text-xs text-gray-600">
+            <div className="text-xs" style={{ color: 'var(--stone-500)' }}>
               {cp.cumulativeDistanceKm}km · {cp.altitudeM}m
             </div>
           </div>
@@ -64,45 +84,48 @@ export default function CheckpointRow({ result }: Props) {
       </td>
 
       {/* Arrival */}
-      <td className="py-2 px-3 text-sm font-mono text-gray-300 whitespace-nowrap">
+      <td className="py-2 px-3 text-sm font-mono whitespace-nowrap" style={{ color: 'var(--stone-300)' }}>
         {arrivalClock}
       </td>
 
       {/* Transition */}
-      <td className="py-2 px-3 text-sm font-mono text-amber-400/80 whitespace-nowrap">
+      <td className="py-2 px-3 text-sm font-mono whitespace-nowrap" style={{ color: 'var(--sunset-gold)', opacity: 0.85 }}>
         {transitionMin > 0 ? `+${transitionMin}m` : '—'}
       </td>
 
       {/* Exit time */}
-      <td className="py-2 px-3 text-sm font-mono text-gray-300 whitespace-nowrap">
+      <td className="py-2 px-3 text-sm font-mono whitespace-nowrap" style={{ color: 'var(--stone-300)' }}>
         {transitionMin > 0 ? exitClock : '—'}
       </td>
 
       {/* Cut-off */}
       <td className="py-2 px-3 text-sm font-mono whitespace-nowrap">
         {hasCutoff ? (
-          <span className={isDQ ? 'text-red-400' : bufferMin !== null && bufferMin < 30 ? 'text-amber-400' : 'text-gray-400'}>
+          <span style={{ color: isDQ ? 'var(--alpine-400)' : bufferMin !== null && bufferMin < 30 ? 'var(--sunset-gold)' : 'var(--stone-400)' }}>
             {cutoffClock}
             {cp.cutoffType === 'relative' && (
-              <span className="text-xs text-gray-600 ml-1">(+{cp.cutoffOffsetHours}h)</span>
+              <span className="text-xs ml-1" style={{ color: 'var(--stone-500)' }}>(+{cp.cutoffOffsetHours}h)</span>
             )}
             {cp.isExitCutoff && (
-              <span className="text-xs text-gray-600 ml-1">exit</span>
+              <span className="text-xs ml-1" style={{ color: 'var(--stone-500)' }}>exit</span>
             )}
           </span>
         ) : (
-          <span className="text-gray-700">—</span>
+          <span style={{ color: 'var(--navy-600)' }}>—</span>
         )}
       </td>
 
       {/* Buffer badge */}
       <td className="py-2 px-3 whitespace-nowrap">
         {hasCutoff && bufferMin !== null ? (
-          <span className={`inline-block text-xs font-mono font-bold px-2 py-0.5 rounded border ${bufferBg} ${bufferColor}`}>
+          <span
+            className="inline-block text-xs font-mono font-bold px-2 py-0.5 rounded border"
+            style={{ background: bufferBg, color: bufferColor, borderColor: bufferBorder }}
+          >
             {isDQ ? '✗ DQ' : `+${Math.round(bufferMin)}m`}
           </span>
         ) : (
-          <span className="text-gray-700 text-xs">—</span>
+          <span className="text-xs" style={{ color: 'var(--navy-600)' }}>—</span>
         )}
       </td>
     </tr>

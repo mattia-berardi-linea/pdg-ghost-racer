@@ -28,6 +28,10 @@ function formatDurationInput(ms: number): string {
   return `${h}:${String(m).padStart(2, '0')}`;
 }
 
+function Divider() {
+  return <div className="border-t" style={{ borderColor: 'var(--navy-700)' }} />;
+}
+
 export default function ParametersPanel() {
   const simulationResult = useRaceStore((s) => s.simulationResult);
   const simulationStatus = useRaceStore((s) => s.simulationStatus);
@@ -40,7 +44,6 @@ export default function ParametersPanel() {
   const [inputError, setInputError] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Focus input when editing starts
   useEffect(() => {
     if (editing) inputRef.current?.select();
   }, [editing]);
@@ -77,20 +80,31 @@ export default function ParametersPanel() {
 
   return (
     <div className="flex flex-col gap-5 h-full overflow-y-auto px-1">
-      {/* Summary header */}
-      <div className="bg-gray-800/60 rounded-lg p-3 border border-gray-700">
-        <div className="text-xs text-gray-400 mb-1">Estimated Finish</div>
+
+      {/* Summary card */}
+      <div
+        className="rounded-lg p-4 border"
+        style={{
+          background: 'linear-gradient(135deg, var(--navy-900), var(--navy-800))',
+          borderColor: 'rgba(91,165,214,0.25)',
+          boxShadow: '0 4px 24px rgba(91,165,214,0.08)',
+        }}
+      >
+        <div className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--stone-400)' }}>
+          Estimated Finish
+        </div>
+
         {simulationStatus === 'running' ? (
-          <div className="text-gray-500 text-sm animate-pulse">Calculating…</div>
+          <div className="text-sm animate-pulse" style={{ color: 'var(--stone-500)' }}>Calculating…</div>
         ) : simulationResult ? (
           <div>
-            <div className="text-2xl font-bold font-mono text-white">
+            <div className="text-3xl font-bold font-mono text-white tracking-tight">
               {simulationResult.finishClock}
             </div>
 
-            {/* Editable total time row */}
-            <div className="flex items-center gap-1 mt-0.5">
-              <span className="text-xs text-gray-400">Total:</span>
+            {/* Editable total time */}
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="text-xs" style={{ color: 'var(--stone-500)' }}>Total:</span>
               {editing ? (
                 <>
                   <input
@@ -101,55 +115,63 @@ export default function ParametersPanel() {
                     onKeyDown={(e) => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') cancelEdit(); }}
                     onBlur={commitEdit}
                     placeholder="H:MM"
-                    className={`w-16 text-xs font-mono bg-gray-700 rounded px-1 py-0.5 outline-none border ${inputError ? 'border-red-500 text-red-400' : 'border-blue-500 text-white'}`}
+                    className="w-16 text-xs font-mono rounded px-1.5 py-0.5 outline-none border"
+                    style={{
+                      background: 'var(--navy-800)',
+                      borderColor: inputError ? 'var(--alpine-500)' : 'var(--glacier-500)',
+                      color: inputError ? 'var(--alpine-400)' : 'white',
+                    }}
                   />
-                  <button onClick={cancelEdit} className="text-gray-500 hover:text-gray-300 text-xs leading-none">✕</button>
+                  <button onClick={cancelEdit} className="text-xs leading-none" style={{ color: 'var(--stone-500)' }}>✕</button>
                 </>
               ) : (
                 <>
                   <button
                     onClick={startEditing}
-                    className="text-xs font-mono text-gray-300 hover:text-white underline decoration-dashed underline-offset-2"
+                    className="text-xs font-mono underline decoration-dashed underline-offset-2"
+                    style={{ color: 'var(--stone-300)' }}
                     title="Click to set a target total time"
                   >
                     {displayMs ? formatDuration(displayMs) : '—'}
                   </button>
-                  {targetTotalMs && (
-                    <button onClick={clearTarget} className="text-gray-500 hover:text-red-400 text-xs leading-none ml-0.5" title="Clear target">✕</button>
-                  )}
-                  {!targetTotalMs && (
-                    <button onClick={startEditing} className="text-gray-600 hover:text-gray-400 ml-0.5" title="Set target time">✏</button>
+                  {targetTotalMs ? (
+                    <button onClick={clearTarget} className="text-xs leading-none ml-0.5 hover:opacity-80" style={{ color: 'var(--alpine-400)' }} title="Clear target">✕</button>
+                  ) : (
+                    <button onClick={startEditing} className="text-xs leading-none ml-0.5 opacity-40 hover:opacity-80" style={{ color: 'var(--glacier-400)' }} title="Set target time">✏</button>
                   )}
                 </>
               )}
             </div>
 
             {targetTotalMs && (
-              <div className="text-xs text-amber-400/90 mt-1">Target mode — checkpoint times adjusted</div>
+              <div className="text-xs mt-1.5 font-medium" style={{ color: 'var(--sunset-gold)' }}>
+                Target mode — checkpoint times adjusted
+              </div>
             )}
           </div>
         ) : (
-          <div className="text-gray-600 text-sm">—</div>
+          <div className="text-sm" style={{ color: 'var(--stone-500)' }}>—</div>
         )}
+
         {normalizedProfile.activityCount === 0 && !targetTotalMs && (
-          <div className="text-xs text-amber-500/80 mt-1">Using default profile</div>
+          <div className="text-xs mt-2" style={{ color: 'var(--sunset-gold)' }}>Using default profile</div>
         )}
         {normalizedProfile.activityCount > 0 && (
-          <div className="text-xs text-blue-400/80 mt-1">
+          <div className="text-xs mt-2" style={{ color: 'var(--glacier-400)' }}>
             Profile from {normalizedProfile.activityCount} GPX file{normalizedProfile.activityCount > 1 ? 's' : ''}
           </div>
         )}
       </div>
 
-      <div className="border-t border-gray-800" />
+      <Divider />
       <GpxDropzone />
-      <div className="border-t border-gray-800" />
+      <Divider />
       <StartTimeSelector />
-      <div className="border-t border-gray-800" />
+      <Divider />
       <IntensitySlider />
-      <div className="border-t border-gray-800" />
+      <Divider />
       <ConditionsToggle />
-      <div className="border-t border-gray-800" />
+      <Divider />
       <TransitionsManager />
     </div>
   );

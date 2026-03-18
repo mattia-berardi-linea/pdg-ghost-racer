@@ -14,10 +14,10 @@ const LEGEND_H = 20; // px — must match the legend div height below
 const MARGIN = { top: 8, right: 16, bottom: 80, left: 52 };
 
 const ZONE_COLORS: Record<SlopeZone, string> = {
-  steep_climb:    '#ef4444',
-  moderate_climb: '#f59e0b',
-  flat:           '#22c55e',
-  descent:        '#3b82f6',
+  steep_climb:    '#d64f3d', // alpine-600
+  moderate_climb: '#fbbf24', // sunset-gold
+  flat:           '#4ade80', // mountain-green
+  descent:        '#5ba5d6', // glacier-500
 };
 
 function decimate(
@@ -111,8 +111,8 @@ export default function ElevationProfile() {
     // Gradient
     const defs = root.append('defs');
     const grad = defs.append('linearGradient').attr('id', 'elev-grad').attr('x1','0').attr('y1','0').attr('x2','0').attr('y2','1');
-    grad.append('stop').attr('offset','0%').attr('stop-color','#4b5563').attr('stop-opacity', 0.7);
-    grad.append('stop').attr('offset','100%').attr('stop-color','#111827').attr('stop-opacity', 0.9);
+    grad.append('stop').attr('offset','0%').attr('stop-color','#5ba5d6').attr('stop-opacity', 0.28);
+    grad.append('stop').attr('offset','100%').attr('stop-color','#0f1f35').attr('stop-opacity', 0.05);
 
     // Area
     const areaGen = d3.area<{ distM: number; ele: number }>()
@@ -135,7 +135,7 @@ export default function ElevationProfile() {
       .x((d) => xScale(d.distM)).y((d) => yScale(d.ele))
       .curve(d3.curveMonotoneX);
     g.append('path').datum(elevPoints)
-      .attr('fill','none').attr('stroke','#93c5fd').attr('stroke-width', 1.5)
+      .attr('fill','none').attr('stroke','#7eb9e0').attr('stroke-width', 1.5)
       .attr('d', lineGen);
 
     // Axes (drawn before checkpoints so labels render on top)
@@ -143,13 +143,13 @@ export default function ElevationProfile() {
     const yAxis = d3.axisLeft(yScale).ticks(5).tickFormat((d) => `${d}m`);
 
     g.append('g').attr('transform', `translate(0,${innerH})`).call(xAxis)
-      .call((ax) => ax.select('.domain').attr('stroke','#374151'))
-      .call((ax) => ax.selectAll('.tick line').attr('stroke','#374151'))
+      .call((ax) => ax.select('.domain').attr('stroke','#253752'))
+      .call((ax) => ax.selectAll('.tick line').attr('stroke','#253752'))
       .call((ax) => ax.selectAll('.tick text').attr('fill','#6b7280').attr('font-size','10px'));
 
     g.append('g').call(yAxis)
-      .call((ax) => ax.select('.domain').attr('stroke','#374151'))
-      .call((ax) => ax.selectAll('.tick line').attr('stroke','#374151'))
+      .call((ax) => ax.select('.domain').attr('stroke','#253752'))
+      .call((ax) => ax.selectAll('.tick line').attr('stroke','#253752'))
       .call((ax) => ax.selectAll('.tick text').attr('fill','#6b7280').attr('font-size','10px'));
 
     // Checkpoint markers + labels below axis
@@ -161,10 +161,10 @@ export default function ElevationProfile() {
 
       const result = checkpointResults.find((r) => r.checkpoint.id === cp.id);
       const color =
-        !result || result.status === 'none' ? '#6b7280'
-        : result.isDQ                       ? '#ef4444'
-        : result.status === 'tight'         ? '#f59e0b'
-        :                                     '#22c55e';
+        !result || result.status === 'none' ? '#374a66'
+        : result.isDQ                       ? '#e56b5a'
+        : result.status === 'tight'         ? '#fbbf24'
+        :                                     '#4ade80';
 
       const x        = xScale(cpDistM);
       const hasCutoff = cp.cutoffType !== 'none';
@@ -180,7 +180,7 @@ export default function ElevationProfile() {
       g.append('circle')
         .attr('cx', x).attr('cy', yScale(ele))
         .attr('r', hasCutoff ? 5 : 3)
-        .attr('fill', color).attr('stroke','#111827').attr('stroke-width', 1);
+        .attr('fill', color).attr('stroke','#0a1628').attr('stroke-width', 1);
 
       // Only render permanent label + connector for cutoff checkpoints
       if (hasCutoff) {
@@ -219,10 +219,10 @@ export default function ElevationProfile() {
     // Tooltip
     const tooltip = g.append('g').attr('class','tooltip').style('display','none');
     const ttRect = tooltip.append('rect').attr('x',6).attr('y',-28).attr('width',150).attr('height',54)
-      .attr('fill','#1f2937').attr('stroke','#374151').attr('rx',4).attr('opacity',0.96);
-    const tt1 = tooltip.append('text').attr('x',12).attr('y',-12).attr('fill','#e5e7eb').attr('font-size','11px').attr('font-family','monospace');
-    const tt2 = tooltip.append('text').attr('x',12).attr('y', 4).attr('fill','#9ca3af').attr('font-size','10px').attr('font-family','monospace');
-    const tt3 = tooltip.append('text').attr('x',12).attr('y',18).attr('fill','#9ca3af').attr('font-size','10px').attr('font-family','monospace');
+      .attr('fill','#0f1f35').attr('stroke','#253752').attr('rx',4).attr('opacity',0.97);
+    const tt1 = tooltip.append('text').attr('x',12).attr('y',-12).attr('fill','#d1d5db').attr('font-size','11px').attr('font-family','monospace');
+    const tt2 = tooltip.append('text').attr('x',12).attr('y', 4).attr('fill','#6b7280').attr('font-size','10px').attr('font-family','monospace');
+    const tt3 = tooltip.append('text').attr('x',12).attr('y',18).attr('fill','#6b7280').attr('font-size','10px').attr('font-family','monospace');
     const tt4 = tooltip.append('text').attr('x',12).attr('y',33).attr('font-size','10px').attr('font-family','monospace');
 
     // Invisible interaction overlay (covers chart area only, not label zone)
@@ -258,10 +258,10 @@ export default function ElevationProfile() {
         tt3.text(elapsed ? `~${elapsed} elapsed` : '');
         if (nearCp) {
           const cpResult = simulationResult?.checkpointResults.find((r) => r.checkpoint.id === nearCp.id);
-          const cpColor = !cpResult || cpResult.status === 'none' ? '#9ca3af'
-            : cpResult.isDQ ? '#ef4444'
-            : cpResult.status === 'tight' ? '#f59e0b'
-            : '#22c55e';
+          const cpColor = !cpResult || cpResult.status === 'none' ? '#6b7280'
+            : cpResult.isDQ ? '#e56b5a'
+            : cpResult.status === 'tight' ? '#fbbf24'
+            : '#4ade80';
           tt4.text(nearCp.name).attr('fill', cpColor);
         } else {
           tt4.text('');
@@ -273,7 +273,7 @@ export default function ElevationProfile() {
 
   if (!courseSegments || courseSegments.length === 0) {
     return (
-      <div ref={containerRef} className="w-full h-full flex items-center justify-center text-gray-500 text-sm">
+      <div ref={containerRef} className="w-full h-full flex items-center justify-center text-sm" style={{ color: 'var(--stone-500)' }}>
         Loading course data…
       </div>
     );
@@ -282,7 +282,7 @@ export default function ElevationProfile() {
   return (
     <div ref={containerRef} className="w-full h-full flex flex-col">
       {/* Legend row — fixed height, matches LEGEND_H constant */}
-      <div className="flex gap-3 px-2 items-center flex-shrink-0 text-xs text-gray-500" style={{ height: LEGEND_H }}>
+      <div className="flex gap-3 px-2 items-center flex-shrink-0 text-xs" style={{ height: LEGEND_H, color: 'var(--stone-500)' }}>
         {(Object.entries(ZONE_COLORS) as [SlopeZone, string][]).map(([zone, color]) => (
           <span key={zone} className="flex items-center gap-1">
             <span className="inline-block w-3 h-2 rounded-sm" style={{ background: color }} />

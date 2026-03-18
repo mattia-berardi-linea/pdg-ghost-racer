@@ -39,23 +39,31 @@ export default function GpxDropzone() {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-gray-300 uppercase tracking-wider">GPX Files</span>
-        <span className="text-xs text-gray-500">{slotsUsed}/5</span>
+        <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--stone-400)' }}>
+          GPX Files
+        </span>
+        <span className="text-xs font-mono" style={{ color: 'var(--stone-500)' }}>{slotsUsed}/5</span>
       </div>
 
       {/* Uploaded files list */}
       {parsedActivities.map((act) => (
         <div
           key={act.fileName}
-          className="flex items-center justify-between bg-gray-800 rounded px-2 py-1.5 text-xs"
+          className="flex items-center justify-between rounded-lg px-3 py-2 text-xs border"
+          style={{ background: 'var(--navy-800)', borderColor: 'var(--navy-700)' }}
         >
-          <span className="text-blue-400 truncate max-w-[160px]">{act.fileName}</span>
-          <span className="text-gray-500 mx-2">
+          <span className="truncate max-w-[150px] font-medium" style={{ color: 'var(--glacier-400)' }}>
+            {act.fileName}
+          </span>
+          <span className="mx-2" style={{ color: 'var(--stone-500)' }}>
             {act.totalDistanceKm.toFixed(1)}km / {Math.round(act.totalElevationGainM)}m D+
           </span>
           <button
             onClick={() => removeActivity(act.fileName)}
-            className="text-gray-600 hover:text-red-400 transition-colors ml-1"
+            className="transition-colors"
+            style={{ color: 'var(--stone-500)' }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--alpine-400)')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--stone-500)')}
             aria-label="Remove"
           >
             ×
@@ -70,15 +78,22 @@ export default function GpxDropzone() {
           onDragLeave={() => setDragging(false)}
           onDrop={onDrop}
           onClick={() => inputRef.current?.click()}
-          className={`
-            border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors
-            ${dragging ? 'border-blue-400 bg-blue-900/20' : 'border-gray-600 hover:border-gray-500'}
-          `}
+          className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-all"
+          style={{
+            borderColor: dragging ? 'var(--glacier-400)' : 'var(--navy-600)',
+            background: dragging ? 'rgba(91,165,214,0.08)' : 'transparent',
+          }}
+          onMouseEnter={(e) => {
+            if (!dragging) (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--navy-500, var(--navy-600))';
+          }}
+          onMouseLeave={(e) => {
+            if (!dragging) (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--navy-600)';
+          }}
         >
-          <p className="text-gray-400 text-xs">
+          <p className="text-xs" style={{ color: 'var(--stone-400)' }}>
             Drop .gpx file{slotsLeft > 1 ? 's' : ''} here
             <br />
-            <span className="text-gray-600">or click to browse</span>
+            <span style={{ color: 'var(--stone-500)' }}>or click to browse</span>
           </p>
           <input
             ref={inputRef}
@@ -91,10 +106,10 @@ export default function GpxDropzone() {
         </div>
       )}
 
-      {error && <p className="text-red-400 text-xs">{error}</p>}
+      {error && <p className="text-xs" style={{ color: 'var(--alpine-400)' }}>{error}</p>}
 
       {slotsUsed === 0 && (
-        <p className="text-gray-600 text-xs">
+        <p className="text-xs" style={{ color: 'var(--stone-500)' }}>
           Using default profile (TSB 4h50m baseline)
         </p>
       )}
