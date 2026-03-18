@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import type { ParsedActivity, NormalizedProfile, CourseSegment, SimulationResult, SlopeZone } from '@/types';
 import { CHECKPOINTS, DEFAULT_START_TIME } from '@/lib/constants';
-import { DEFAULT_PROFILE } from '@/data/defaultProfile';
 
 // Build default transitions from checkpoint definitions
 const buildDefaultTransitions = (): Record<string, number> => {
@@ -56,9 +55,15 @@ export const useRaceStore = create<RaceStore>((set) => ({
   intensity: 0,
   conditions: 0,
   transitions: buildDefaultTransitions(),
-  targetTotalMs: null,
+  targetTotalMs: 12 * 3600 * 1000, // 12h default; overrides calculated total
 
-  normalizedProfile: DEFAULT_PROFILE,
+  // Placeholder speeds — replaced by reference calibration once course loads
+  normalizedProfile: {
+    zoneSpeedMs: { steep_climb: 0.50, moderate_climb: 0.90, flat: 1.50, descent: 2.00 },
+    activityCount: 0,
+    activityDurationMs: 0,
+    zonesWithData: [],
+  },
   courseSegments: null,
   referenceZoneSpeeds: null,
   simulationResult: null,

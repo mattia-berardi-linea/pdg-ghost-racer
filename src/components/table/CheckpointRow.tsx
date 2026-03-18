@@ -122,7 +122,7 @@ export default function CheckpointRow({ result }: Props) {
             className="inline-block text-xs font-mono font-bold px-2 py-0.5 rounded border"
             style={{ background: bufferBg, color: bufferColor, borderColor: bufferBorder }}
           >
-            {isDQ ? '✗ DQ' : `+${Math.round(bufferMin)}m`}
+            {isDQ ? `✗ −${Math.round(Math.abs(bufferMin))}m` : `+${Math.round(bufferMin)}m`}
           </span>
         ) : (
           <span className="text-xs" style={{ color: 'var(--navy-600)' }}>—</span>

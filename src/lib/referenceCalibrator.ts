@@ -1,5 +1,5 @@
 /**
- * Derives reference zone speeds (m/s) from the Z2 top-10 median section times
+ * Derives reference zone speeds (m/s) from the full-field Z2 median section times
  * and the actual course segments via least-squares regression.
  *
  * Model:  time_section_i = Σ_z (distance_z_i / speed_z)
@@ -7,7 +7,7 @@
  * Let x[z] = 1/speed[z] (pace in s/m).  Then:
  *   b[i] = Σ_z  A[i][z] * x[z]   where A[i][z] = metres of zone z in section i.
  *
- * Solve the 12×4 system in the least-squares sense via the 4×4 normal equations:
+ * Solve the 13×4 system in the least-squares sense via the 4×4 normal equations:
  *   (A^T A) x = A^T b
  * using Gaussian elimination with partial pivoting.
  *
@@ -102,7 +102,7 @@ function solveGaussian(M: number[][], rhs: number[]): number[] {
 }
 
 /**
- * Derive reference zone speeds from the course segments and the Z2 median section times.
+ * Derive reference zone speeds from the course segments and the full-field Z2 median section times.
  * Returns a map of zone → speed in m/s.
  */
 export function deriveReferenceZoneSpeeds(

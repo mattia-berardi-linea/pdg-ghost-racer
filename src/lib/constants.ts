@@ -27,8 +27,8 @@ export const SLOPE_THRESHOLDS = {
 // PDG Golden Track GPX (public/gpx/pdg-golden-track.gpx, 56.70 km total).
 // They differ from official race distances because the GPX approximates the
 // actual race route.  Elevations are also taken from the GPX at the matched
-// track point, except Zermatt (official) and Pas du Chat / La Barma /
-// Rosablanche where the GPX value is noted.
+// track point, except Zermatt (official) and La Barma / Rosablanche where
+// the GPX value is noted.
 // ---------------------------------------------------------------------------
 export const CHECKPOINTS: CheckpointDef[] = [
   {
@@ -79,6 +79,16 @@ export const CHECKPOINTS: CheckpointDef[] = [
     defaultTransitionMin: 10,
   },
   {
+    id: 'combe_chevres',
+    name: 'Combe du pas de Chèvres',
+    cumulativeDistanceKm: 33.10,  // GPX ~33.1 km; on ascent from Arolla to Riedmatten (official 33.1 km)
+    altitudeM: 2750,              // approx — 86% of climb from Arolla (1993 m) to Riedmatten (2919 m)
+    cutoffType: 'absolute',
+    cutoffAbsoluteTime: '08:15',
+    isExitCutoff: false,
+    defaultTransitionMin: 0,
+  },
+  {
     id: 'col_riedmatten',
     name: 'Col de Riedmatten',
     cumulativeDistanceKm: 33.72,  // GPX: 2 m from ref coords (official 38.5 km)
@@ -90,19 +100,19 @@ export const CHECKPOINTS: CheckpointDef[] = [
   {
     id: 'pas_du_chat',
     name: 'Pas du Chat',
-    cumulativeDistanceKm: 33.82,  // GPX: on descent from Riedmatten ridge (official 40 km)
-    altitudeM: 2831,              // GPX elevation at this point (official 2884 m)
+    cumulativeDistanceKm: 36.09,  // GPX: 36.087 km matched at 2480 m (descent from Riedmatten)
+    altitudeM: 2479,
     cutoffType: 'none',
     isExitCutoff: false,
-    defaultTransitionMin: 5, // skins on
+    defaultTransitionMin: 0,
   },
   {
-    id: 'la_barma',
-    name: 'La Barma',
-    cumulativeDistanceKm: 40.73,  // GPX: exact elevation match 2458 m (official 45 km)
-    altitudeM: 2458,
+    id: 'ecoulaies',
+    name: 'Les Ecoulaies',
+    cumulativeDistanceKm: 41.05,  // GPX: slightly further than La Barma (40.73 km); 2547 m on ascent to Rosablanche
+    altitudeM: 2547,
     cutoffType: 'absolute',
-    cutoffAbsoluteTime: '10:30',
+    cutoffAbsoluteTime: '10:45',
     isExitCutoff: false,
     defaultTransitionMin: 5,
   },

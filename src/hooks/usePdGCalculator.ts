@@ -10,9 +10,10 @@ import type { SimulationResult, NormalizedProfile, SlopeZone } from '@/types';
 /**
  * Scale factor applied to reference speeds when no GPX is uploaded.
  * Chosen so the default profile produces ~12h15m on the PdG course.
- * Reference median total ≈ 7h30m → multiplier = 7.5 / 12.25 ≈ 0.61
+ * Full-field reference median ≈ 13h25m (805 min) → multiplier = 13.42 / 12.25 ≈ 1.096
+ * (user is ~10% faster than the median Z2 finisher)
  */
-const DEFAULT_MULTIPLIER = 0.61;
+const DEFAULT_MULTIPLIER = 1.096;
 
 const ZONES: SlopeZone[] = ['steep_climb', 'moderate_climb', 'flat', 'descent'];
 
@@ -41,6 +42,7 @@ export function usePdGCalculator() {
   const setReferenceZoneSpeeds = useRaceStore((s) => s.setReferenceZoneSpeeds);
   const setSimulationResult = useRaceStore((s) => s.setSimulationResult);
   const setSimulationStatus = useRaceStore((s) => s.setSimulationStatus);
+  const setTargetTotalMs = useRaceStore((s) => s.setTargetTotalMs);
 
   // Track whether we've derived reference speeds for the current course
   const refDerivedRef = useRef(false);
@@ -78,6 +80,9 @@ export function usePdGCalculator() {
     }).then((res) => {
       if (res.type !== 'PROFILE_RESULT') return;
       const profile = res.result;
+
+      // GPX takes priority over any active target — let the measured speeds drive the estimate
+      setTargetTotalMs(null);
 
       // Patch zones that have no measured data with reference speeds
       if (referenceZoneSpeeds && profile.zonesWithData.length < ZONES.length) {

@@ -8,6 +8,7 @@ import type {
   SlopeZone,
 } from '@/types';
 import { parseStartTimeMs, resolveAbsoluteTimeMs, formatClock } from './timeUtils';
+import { SECTION_REGRESSIONS } from '@/data/sectionRegressions';
 
 const SNAP_THRESHOLD_M = 1000; // within 1km of checkpoint distance → snap
 const GHOST_SAMPLE_INTERVAL_M = 200; // emit a ghost point every ~200m
@@ -15,20 +16,21 @@ const GHOST_SAMPLE_INTERVAL_M = 200; // emit a ghost point every ~200m
 /**
  * Power-law durability correction.
  *
- * When a user uploads a short training activity, their measured zone speeds
- * are faster than they'll manage over 12+ hours.  We scale speeds down by:
+ * When a user uploads a training activity, their measured zone speeds are
+ * faster than they'll sustain over 12+ hours.  We scale speeds down by:
  *
- *   durabilityFactor = min( (T_raw / actDurationMs)^β, 1.4 )
+ *   durabilityFactor = min( (T_raw / actDurationMs)^β, 1.8 )
  *
- * where β = α / (1 - α) = 0.11 / 0.89 ≈ 0.1236  (Riegel exponent α = 0.11).
+ * β = 0.625 is empirically calibrated so that a TSB result of 4h50m
+ * (24 km / 2500 m D+) predicts ~12h15m on the PdG course, consistent
+ * with Riegel-based field estimates for mountain ultra events.
  *
  * T_raw is estimated from a quick single-pass without the correction.
- * The factor is only applied when activities were uploaded (actDurationMs > 0)
- * and the activity is shorter than 2 h (if it's already race-length, no correction).
+ * The factor is only applied when the estimated race is longer than the
+ * uploaded activity (ratio > 1); no speed-up is ever applied.
  */
-const DURABILITY_BETA = 0.1236;
-const DURABILITY_CAP  = 1.4;
-const TWO_HOURS_MS    = 2 * 3600 * 1000;
+const DURABILITY_BETA = 0.625;
+const DURABILITY_CAP  = 1.8;
 
 function estimateRawDuration(
   courseSegments: CourseSegment[],
@@ -79,15 +81,17 @@ export function runSimulation(payload: SimulatePayload): SimulationResult {
     targetTotalMs,
   } = payload;
 
-  // Apply durability factor when uploaded activities are shorter than 2h
+  // Apply durability factor when the estimated race is longer than the uploaded activity
   let effectiveZoneSpeeds = profile.zoneSpeedMs;
-  if (activityDurationMs > 0 && activityDurationMs < TWO_HOURS_MS) {
+  if (activityDurationMs > 0) {
     const T_raw = estimateRawDuration(courseSegments, profile.zoneSpeedMs, intensityFactor, conditionsFactor, transitions, checkpoints);
     const ratio = T_raw / activityDurationMs;
-    const factor = Math.min(Math.pow(ratio, DURABILITY_BETA), DURABILITY_CAP);
-    effectiveZoneSpeeds = {} as Record<SlopeZone, number>;
-    for (const z of ZONES) {
-      effectiveZoneSpeeds[z] = profile.zoneSpeedMs[z] / factor;
+    if (ratio > 1) {
+      const factor = Math.min(Math.pow(ratio, DURABILITY_BETA), DURABILITY_CAP);
+      effectiveZoneSpeeds = {} as Record<SlopeZone, number>;
+      for (const z of ZONES) {
+        effectiveZoneSpeeds[z] = profile.zoneSpeedMs[z] / factor;
+      }
     }
   }
 
@@ -116,15 +120,11 @@ export function runSimulation(payload: SimulatePayload): SimulationResult {
   let lastGhostSampleDistM = 0;
 
   const ghostTimeline: GhostTimelinePoint[] = [];
-  const checkpointResults: CheckpointResult[] = [];
 
   // Sort checkpoints by distance
   const sortedCheckpoints = [...checkpoints].sort(
     (a, b) => a.cumulativeDistanceKm - b.cumulativeDistanceKm
   );
-
-  // Track which checkpoints have been processed
-  const processedIds = new Set<string>();
 
   // Emit start point
   if (courseSegments.length > 0) {
@@ -142,13 +142,9 @@ export function runSimulation(payload: SimulatePayload): SimulationResult {
     const effectiveSpeed =
       baseSpeed * segment.altitudePenaltyFactor * finalIntensityFactor * finalConditionsFactor;
 
-    // Guard against zero/negative speed
     const safeSpeed = Math.max(effectiveSpeed, 0.1);
-    const segmentDurationMs = (segment.distanceM / safeSpeed) * 1000;
+    elapsedMs += (segment.distanceM / safeSpeed) * 1000;
 
-    elapsedMs += segmentDurationMs;
-
-    // Emit ghost sample points periodically
     if (segment.cumulativeDistanceM - lastGhostSampleDistM >= GHOST_SAMPLE_INTERVAL_M) {
       ghostTimeline.push({
         cumulativeDistanceM: segment.cumulativeDistanceM,
@@ -159,38 +155,62 @@ export function runSimulation(payload: SimulatePayload): SimulationResult {
       });
       lastGhostSampleDistM = segment.cumulativeDistanceM;
     }
-
-    // Check if any checkpoint falls near this segment's end
-    for (const cp of sortedCheckpoints) {
-      if (processedIds.has(cp.id)) continue;
-      const cpDistM = cp.cumulativeDistanceKm * 1000;
-      if (Math.abs(segment.cumulativeDistanceM - cpDistM) <= SNAP_THRESHOLD_M) {
-        const result = buildCheckpointResult(cp, startMs, elapsedMs, transitions);
-        checkpointResults.push(result);
-        processedIds.add(cp.id);
-
-        // Transition time pauses movement but ticks the clock
-        elapsedMs += result.transitionMin * 60000;
-      }
-    }
   }
 
-  // Ensure finish checkpoint is in results
   const totalDistM =
     courseSegments.length > 0
       ? courseSegments[courseSegments.length - 1].cumulativeDistanceM
       : 0;
 
-  const finishMs = startMs + elapsedMs;
+  // Derive checkpoint arrival times from the empirical section regression model.
+  // The total race time (elapsedMs) drives each section's prediction; sections
+  // are accumulated in distance order to produce arrival times.
+  const checkpointResults = buildRegressionCheckpointResults(
+    elapsedMs / 60000,
+    sortedCheckpoints,
+    startMs,
+    transitions,
+  );
 
   return {
     startMs,
     ghostTimeline,
     checkpointResults,
     totalDurationMs: elapsedMs,
-    finishClock: formatClock(finishMs),
+    finishClock: formatClock(startMs + elapsedMs),
     totalDistanceM: totalDistM,
   };
+}
+
+/**
+ * Compute checkpoint arrival times using the empirical linear regression model
+ * (section_time = intercept + slope × totalMin) rather than zone-speed
+ * terrain accumulation.  This produces accurate inter-checkpoint proportions
+ * across the full range of finishing times.
+ */
+function buildRegressionCheckpointResults(
+  totalMin: number,
+  checkpoints: CheckpointDef[],
+  startMs: number,
+  transitions: Record<string, number>,
+): CheckpointResult[] {
+  const results: CheckpointResult[] = [];
+  let cumulativeMin = 0;
+
+  for (const cp of checkpoints) {
+    if (cp.id === 'zermatt') continue; // start — no result needed
+
+    const reg = SECTION_REGRESSIONS[cp.id];
+    if (!reg) continue; // unknown checkpoint — skip
+
+    // Clamp to at least 1 min so section time is always positive
+    const sectionMin = Math.max(1, reg.intercept + reg.slope * totalMin);
+    cumulativeMin += sectionMin;
+
+    results.push(buildCheckpointResult(cp, startMs, cumulativeMin * 60000, transitions));
+  }
+
+  return results;
 }
 
 function buildCheckpointResult(

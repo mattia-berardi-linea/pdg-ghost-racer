@@ -108,11 +108,6 @@ export default function GpxDropzone() {
 
       {error && <p className="text-xs" style={{ color: 'var(--alpine-400)' }}>{error}</p>}
 
-      {slotsUsed === 0 && (
-        <p className="text-xs" style={{ color: 'var(--stone-500)' }}>
-          Using default profile (TSB 4h50m baseline)
-        </p>
-      )}
     </div>
   );
 }

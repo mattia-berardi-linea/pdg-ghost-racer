@@ -41,12 +41,7 @@ export default function RaceApp() {
       >
         {/* Brand */}
         <div className="flex items-center gap-3">
-          <div className="flex flex-col leading-none">
-            <span className="text-xs font-semibold tracking-[0.2em] uppercase" style={{ color: 'var(--glacier-400)' }}>
-              PDG
-            </span>
-            <span className="text-base font-bold tracking-tight text-white">Ghost Racer</span>
-          </div>
+          <span className="text-base font-bold tracking-tight text-white">PDG Simulator</span>
           <div className="w-px h-8 mx-1" style={{ background: 'var(--navy-700)' }} />
           <span className="text-sm" style={{ color: 'var(--stone-400)' }}>Zermatt → Verbier 2026</span>
         </div>
@@ -75,6 +70,14 @@ export default function RaceApp() {
           )}
           <span className="font-medium" style={{ color: 'var(--stone-500)' }}>57.5 km · 4386 m D+</span>
         </div>
+
+        {/* PDG logo */}
+        <div className="w-px h-8 mx-1 flex-shrink-0" style={{ background: 'var(--navy-700)' }} />
+        <img
+          src="/pdg-logo.png"
+          alt="Patrouille des Glaciers"
+          style={{ height: '44px', width: 'auto', flexShrink: 0 }}
+        />
       </header>
 
       {/* Main grid */}

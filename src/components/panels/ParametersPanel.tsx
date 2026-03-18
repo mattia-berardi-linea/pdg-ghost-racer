@@ -153,9 +153,6 @@ export default function ParametersPanel() {
           <div className="text-sm" style={{ color: 'var(--stone-500)' }}>—</div>
         )}
 
-        {normalizedProfile.activityCount === 0 && !targetTotalMs && (
-          <div className="text-xs mt-2" style={{ color: 'var(--sunset-gold)' }}>Using default profile</div>
-        )}
         {normalizedProfile.activityCount > 0 && (
           <div className="text-xs mt-2" style={{ color: 'var(--glacier-400)' }}>
             Profile from {normalizedProfile.activityCount} GPX file{normalizedProfile.activityCount > 1 ? 's' : ''}

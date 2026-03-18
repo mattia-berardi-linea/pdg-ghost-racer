@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useRaceStore } from '@/store/raceStore';
@@ -25,6 +25,7 @@ export default function RaceMap() {
   const mapRef       = useRef<mapboxgl.Map | null>(null);
   const ghostMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const cpMarkersRef   = useRef<mapboxgl.Marker[]>([]);
+  const [is3D, setIs3D] = useState(false);
 
   const courseSegments   = useRaceStore((s) => s.courseSegments);
   const simulationResult = useRaceStore((s) => s.simulationResult);
@@ -172,6 +173,45 @@ export default function RaceMap() {
     syncToDistance(scrubberDistanceM);
   }, [scrubberDistanceM, simulationResult, syncToDistance]);
 
+  // ── 5. Toggle 3D terrain ──────────────────────────────────────────────────
+  const toggle3D = useCallback(() => {
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+
+    if (!is3D) {
+      if (!map.getSource('mapbox-dem')) {
+        map.addSource('mapbox-dem', {
+          type: 'raster-dem',
+          url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+          tileSize: 512,
+          maxzoom: 14,
+        });
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (map as any).setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
+      if (!map.getLayer('sky')) {
+        map.addLayer({
+          id: 'sky',
+          type: 'sky',
+          paint: {
+            'sky-type': 'atmosphere',
+            'sky-atmosphere-sun': [0.0, 0.0],
+            'sky-atmosphere-sun-intensity': 15,
+          },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
+      }
+      map.easeTo({ pitch: 65, bearing: -20, duration: 1000 });
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (map as any).setTerrain(null);
+      if (map.getLayer('sky')) map.removeLayer('sky');
+      map.easeTo({ pitch: 0, bearing: 0, duration: 800 });
+    }
+
+    setIs3D((prev) => !prev);
+  }, [is3D]);
+
   return (
     <div className="relative w-full h-full rounded-lg overflow-hidden">
       {(!TOKEN || TOKEN === 'pk.YOUR_TOKEN_HERE') && (
@@ -187,6 +227,23 @@ export default function RaceMap() {
         </div>
       )}
       <div ref={mapContainer} className="w-full h-full" />
+
+      {/* 3D terrain toggle */}
+      {TOKEN && TOKEN !== 'pk.YOUR_TOKEN_HERE' && (
+        <button
+          onClick={toggle3D}
+          className="absolute bottom-8 left-3 text-xs font-bold rounded px-2.5 py-1 border transition-colors"
+          style={{
+            background: is3D ? 'rgba(91,165,214,0.25)' : 'rgba(15,31,53,0.85)',
+            borderColor: is3D ? 'rgba(91,165,214,0.6)' : 'rgba(91,165,214,0.25)',
+            color: is3D ? '#5ba5d6' : '#9ca3af',
+            backdropFilter: 'blur(4px)',
+          }}
+          title={is3D ? 'Switch to 2D' : 'Switch to 3D terrain'}
+        >
+          {is3D ? '2D' : '3D'}
+        </button>
+      )}
     </div>
   );
 }

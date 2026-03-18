@@ -125,16 +125,17 @@ export function normalizeProfile(activities: ParsedActivity[]): NormalizedProfil
     (z) => combined[z].totalDistanceM > 50
   );
 
-  // Fall back to default profile speeds for zones with no data
-  const { DEFAULT_PROFILE } = require('../data/defaultProfile');
+  // Zones with no measured data get a placeholder; usePdGCalculator patches them
+  // with referenceZoneSpeeds before the profile is used in simulation.
+  const FALLBACK: Record<SlopeZone, number> = {
+    steep_climb: 0.50, moderate_climb: 0.90, flat: 1.50, descent: 2.00,
+  };
   const zoneSpeedMs = {} as Record<SlopeZone, number>;
 
   for (const zone of ZONES) {
-    if (combined[zone].totalDistanceM > 50) {
-      zoneSpeedMs[zone] = combined[zone].weightedSpeedSum / combined[zone].totalDistanceM;
-    } else {
-      zoneSpeedMs[zone] = DEFAULT_PROFILE.zoneSpeedMs[zone];
-    }
+    zoneSpeedMs[zone] = combined[zone].totalDistanceM > 50
+      ? combined[zone].weightedSpeedSum / combined[zone].totalDistanceM
+      : FALLBACK[zone];
   }
 
   return { zoneSpeedMs, activityCount: activities.length, activityDurationMs, zonesWithData };
