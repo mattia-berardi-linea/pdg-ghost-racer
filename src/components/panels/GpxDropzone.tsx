@@ -90,10 +90,12 @@ export default function GpxDropzone() {
             if (!dragging) (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--navy-600)';
           }}
         >
-          <p className="text-xs" style={{ color: 'var(--stone-400)' }}>
-            Drop .gpx file{slotsLeft > 1 ? 's' : ''} here
+          <p className="text-xs leading-relaxed" style={{ color: 'var(--stone-400)' }}>
+            Drop up to 5 representative training activities here
             <br />
-            <span style={{ color: 'var(--stone-500)' }}>or click to browse</span>
+            <span style={{ color: 'var(--stone-500)' }}>to estimate your PdG race time</span>
+            <br />
+            <span style={{ color: 'var(--stone-600)' }}>or click to browse</span>
           </p>
           <input
             ref={inputRef}
