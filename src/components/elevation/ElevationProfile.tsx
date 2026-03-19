@@ -60,6 +60,11 @@ export default function ElevationProfile() {
   const scrubberDistanceM = useRaceStore((s) => s.scrubberDistanceM);
   const setScrubberDistance = useRaceStore((s) => s.setScrubberDistance);
 
+  // Keep a ref so D3 event handlers always read the latest simulation
+  // without needing to be recreated (avoids full chart rebuild on every sim update)
+  const simulationResultRef = useRef(simulationResult);
+  simulationResultRef.current = simulationResult;
+
   // Observe the container; subtract LEGEND_H so dimensions match the SVG's CSS height
   useEffect(() => {
     const el = containerRef.current;
@@ -153,7 +158,8 @@ export default function ElevationProfile() {
       .call((ax) => ax.selectAll('.tick text').attr('fill','#6b7280').attr('font-size','10px'));
 
     // Checkpoint markers + labels below axis
-    const checkpointResults = simulationResult?.checkpointResults ?? [];
+    // Use ref for initial colors so simulationResult is not a dep of this effect
+    const checkpointResults = simulationResultRef.current?.checkpointResults ?? [];
 
     for (const cp of CHECKPOINTS) {
       const cpDistM = cp.cumulativeDistanceKm * 1000;
@@ -172,12 +178,14 @@ export default function ElevationProfile() {
 
       // Vertical dashed line
       g.append('line')
+        .attr('class', `cp-line-${cp.id}`)
         .attr('x1', x).attr('x2', x).attr('y1', 0).attr('y2', innerH - stripH)
         .attr('stroke', color).attr('stroke-width', hasCutoff ? 1.5 : 1)
         .attr('stroke-dasharray', '4,3').attr('opacity', 0.8);
 
       // Dot on elevation line
       g.append('circle')
+        .attr('class', `cp-dot-${cp.id}`)
         .attr('cx', x).attr('cy', yScale(ele))
         .attr('r', hasCutoff ? 5 : 3)
         .attr('fill', color).attr('stroke','#0a1628').attr('stroke-width', 1);
@@ -190,6 +198,7 @@ export default function ElevationProfile() {
           .attr('stroke', color).attr('stroke-width', 1).attr('opacity', 0.5);
 
         g.append('text')
+          .attr('class', `cp-label-${cp.id}`)
           .attr('transform', `translate(${x}, ${innerH + 18}) rotate(-55)`)
           .attr('fill', color)
           .attr('font-size', '9.5px')
@@ -199,14 +208,15 @@ export default function ElevationProfile() {
           .text(cp.name);
       }
 
-      // Transition plateau marker
-      if (result && result.transitionMin > 0) {
-        const pw = Math.min(20, innerW * 0.012);
-        g.append('rect')
-          .attr('x', x).attr('y', yScale(ele) - 3)
-          .attr('width', pw).attr('height', 6)
-          .attr('fill','#fbbf24').attr('opacity', 0.7).attr('rx', 2);
-      }
+      // Transition plateau marker — always rendered, opacity toggled by sim update effect
+      const pw = Math.min(20, innerW * 0.012);
+      g.append('rect')
+        .attr('class', `cp-pit-${cp.id}`)
+        .attr('x', x).attr('y', yScale(ele) - 3)
+        .attr('width', pw).attr('height', 6)
+        .attr('fill','#fbbf24')
+        .attr('opacity', result && result.transitionMin > 0 ? 0.7 : 0)
+        .attr('rx', 2);
     }
 
     // Scrubber
@@ -239,9 +249,10 @@ export default function ElevationProfile() {
         g.select('.scrubber-line').attr('x1', clampedX).attr('x2', clampedX);
 
         const ele     = interpolateEle(courseSegments, distM);
-        const ghPoint = simulationResult?.ghostTimeline.find((p) => p.cumulativeDistanceM >= distM);
+        const simRes  = simulationResultRef.current;
+        const ghPoint = simRes?.ghostTimeline.find((p) => p.cumulativeDistanceM >= distM);
         const elapsed = ghPoint ? formatDuration(ghPoint.elapsedMs) : '';
-        const startMs = simulationResult?.startMs ?? 0;
+        const startMs = simRes?.startMs ?? 0;
         const clockTime = ghPoint ? formatClock(startMs + ghPoint.elapsedMs) : '';
         const zone    = getZoneAtDistance(courseSegments, distM);
 
@@ -261,7 +272,7 @@ export default function ElevationProfile() {
         tt3.text(elapsed ? `~${elapsed} elapsed` : '');
         tt4.text(clockTime ? clockTime : '');
         if (nearCp) {
-          const cpResult = simulationResult?.checkpointResults.find((r) => r.checkpoint.id === nearCp.id);
+          const cpResult = simRes?.checkpointResults.find((r) => r.checkpoint.id === nearCp.id);
           const cpColor = !cpResult || cpResult.status === 'none' ? '#6b7280'
             : cpResult.isDQ ? '#e56b5a'
             : cpResult.status === 'tight' ? '#fbbf24'
@@ -275,8 +286,9 @@ export default function ElevationProfile() {
 
   // scrubberDistanceM intentionally excluded — updated imperatively in mousemove
   // and via a separate lightweight effect below to avoid full chart rebuilds on every move
+  // simulationResult intentionally excluded — checkpoint colors updated by targeted effect below
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseSegments, simulationResult, dimensions, setScrubberDistance]);
+  }, [courseSegments, dimensions, setScrubberDistance]);
 
   // Lightweight scrubber-only update — avoids full chart rebuild on every mousemove
   useEffect(() => {
@@ -288,6 +300,25 @@ export default function ElevationProfile() {
     const x = xScale(scrubberDistanceM);
     d3.select(svg).select('.scrubber-line').attr('x1', x).attr('x2', x);
   }, [scrubberDistanceM, courseSegments, dimensions]);
+
+  // Targeted simulation update — only updates checkpoint colors/pit markers, no full rebuild
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg || !courseSegments) return;
+    const results = simulationResult?.checkpointResults ?? [];
+    const g = d3.select(svg).select('g');
+    for (const cp of CHECKPOINTS) {
+      const result = results.find((r) => r.checkpoint.id === cp.id);
+      const color = !result || result.status === 'none' ? '#374a66'
+        : result.isDQ    ? '#e56b5a'
+        : result.status === 'tight' ? '#fbbf24'
+        :                  '#4ade80';
+      g.select(`.cp-dot-${cp.id}`).attr('fill', color);
+      g.select(`.cp-line-${cp.id}`).attr('stroke', color);
+      if (cp.cutoffType !== 'none') g.select(`.cp-label-${cp.id}`).attr('fill', color);
+      g.select(`.cp-pit-${cp.id}`).attr('opacity', result && result.transitionMin > 0 ? 0.7 : 0);
+    }
+  }, [simulationResult, courseSegments]);
 
   if (!courseSegments || courseSegments.length === 0) {
     return (
