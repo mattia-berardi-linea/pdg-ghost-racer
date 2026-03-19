@@ -163,10 +163,12 @@ export function runSimulation(payload: SimulatePayload): SimulationResult {
       : 0;
 
   // Derive checkpoint arrival times from the empirical section regression model.
-  // The total race time (elapsedMs) drives each section's prediction; sections
-  // are accumulated in distance order to produce arrival times.
+  // The regression was trained on actual race times (including transitions), so we
+  // must pass total time (moving + transitions) — not just moving time — otherwise
+  // all checkpoint predictions are systematically too early by ~35 min (default transitions).
+  const totalTransitionMs = computeTransitionMs(checkpoints, transitions);
   const checkpointResults = buildRegressionCheckpointResults(
-    elapsedMs / 60000,
+    (elapsedMs + totalTransitionMs) / 60000,
     sortedCheckpoints,
     startMs,
     transitions,
@@ -176,8 +178,8 @@ export function runSimulation(payload: SimulatePayload): SimulationResult {
     startMs,
     ghostTimeline,
     checkpointResults,
-    totalDurationMs: elapsedMs,
-    finishClock: formatClock(startMs + elapsedMs),
+    totalDurationMs: elapsedMs + totalTransitionMs,
+    finishClock: formatClock(startMs + elapsedMs + totalTransitionMs),
     totalDistanceM: totalDistM,
   };
 }

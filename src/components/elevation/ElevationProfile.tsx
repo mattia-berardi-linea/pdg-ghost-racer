@@ -5,7 +5,7 @@ import * as d3 from 'd3';
 import { useRaceStore } from '@/store/raceStore';
 import { CHECKPOINTS } from '@/lib/constants';
 import { formatDuration, formatClock } from '@/lib/timeUtils';
-import type { CourseSegment, SlopeZone } from '@/types';
+import type { CourseSegment, SlopeZone, CheckpointResult } from '@/types';
 
 // The legend row is rendered as a plain div above the SVG.
 // We subtract its height from the measured container so D3's coordinate
@@ -250,10 +250,12 @@ export default function ElevationProfile() {
 
         const ele     = interpolateEle(courseSegments, distM);
         const simRes  = simulationResultRef.current;
-        const ghPoint = simRes?.ghostTimeline.find((p) => p.cumulativeDistanceM >= distM);
-        const elapsed = ghPoint ? formatDuration(ghPoint.elapsedMs) : '';
-        const startMs = simRes?.startMs ?? 0;
-        const clockTime = ghPoint ? formatClock(startMs + ghPoint.elapsedMs) : '';
+        // Use regression-interpolated time so tooltip matches the checkpoint table exactly
+        const interpolatedMs = simRes
+          ? interpolateRegressionMs(distM, simRes.checkpointResults, simRes.startMs, totalDistM, simRes.totalDurationMs)
+          : null;
+        const elapsed = interpolatedMs !== null && simRes ? formatDuration(interpolatedMs - simRes.startMs) : '';
+        const clockTime = interpolatedMs !== null ? formatClock(interpolatedMs) : '';
         const zone    = getZoneAtDistance(courseSegments, distM);
 
         // Show checkpoint name when hovering within 10px of a checkpoint line
@@ -354,6 +356,44 @@ export default function ElevationProfile() {
       />
     </div>
   );
+}
+
+/**
+ * Interpolate a clock time (ms) at a given distance by linearly interpolating
+ * between regression checkpoint anchor times. This keeps the elevation profile
+ * tooltip consistent with the checkpoint table, which uses the same regression model.
+ */
+function interpolateRegressionMs(
+  distM: number,
+  checkpointResults: CheckpointResult[],
+  startMs: number,
+  totalDistM: number,
+  totalDurationMs: number,
+): number | null {
+  if (!checkpointResults.length) return null;
+
+  const anchors: { distM: number; ms: number }[] = [
+    { distM: 0, ms: startMs },
+    ...checkpointResults.map((r) => ({
+      distM: r.checkpoint.cumulativeDistanceKm * 1000,
+      ms: r.arrivalMs,
+    })),
+    { distM: totalDistM, ms: startMs + totalDurationMs },
+  ];
+
+  if (distM <= 0) return anchors[0].ms;
+  if (distM >= totalDistM) return anchors[anchors.length - 1].ms;
+
+  for (let i = 0; i < anchors.length - 1; i++) {
+    const a = anchors[i], b = anchors[i + 1];
+    if (distM >= a.distM && distM <= b.distM) {
+      const span = b.distM - a.distM;
+      const t = span > 0 ? (distM - a.distM) / span : 0;
+      return Math.round(a.ms + t * (b.ms - a.ms));
+    }
+  }
+
+  return anchors[anchors.length - 1].ms;
 }
 
 function interpolateEle(segments: CourseSegment[], distM: number): number {
