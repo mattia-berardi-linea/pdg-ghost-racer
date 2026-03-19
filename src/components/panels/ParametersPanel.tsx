@@ -9,12 +9,22 @@ import TransitionsManager from './TransitionsManager';
 import { useRaceStore } from '@/store/raceStore';
 import { formatDuration } from '@/lib/timeUtils';
 
-/** Parse "H:MM" or "HH:MM" duration string → milliseconds. Returns null if invalid. */
+/** Parse "H:MM", "HH:MM", "HHMM", or "HMM" duration string → milliseconds. Returns null if invalid. */
 function parseDurationInput(str: string): number | null {
-  const parts = str.trim().split(':');
-  if (parts.length !== 2) return null;
-  const h = parseInt(parts[0], 10);
-  const m = parseInt(parts[1], 10);
+  const trimmed = str.trim();
+  let h: number, m: number;
+  if (trimmed.includes(':')) {
+    const parts = trimmed.split(':');
+    if (parts.length !== 2) return null;
+    h = parseInt(parts[0], 10);
+    m = parseInt(parts[1], 10);
+  } else if (/^\d{3,4}$/.test(trimmed)) {
+    // 3 digits: XYZ → X:YZ, 4 digits: XYZW → XY:ZW
+    h = parseInt(trimmed.slice(0, trimmed.length - 2), 10);
+    m = parseInt(trimmed.slice(-2), 10);
+  } else {
+    return null;
+  }
   if (isNaN(h) || isNaN(m) || h < 0 || m < 0 || m > 59) return null;
   const ms = (h * 60 + m) * 60000;
   return ms > 0 ? ms : null;

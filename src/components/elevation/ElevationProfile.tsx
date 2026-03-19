@@ -197,15 +197,20 @@ export default function ElevationProfile() {
           .attr('y1', innerH).attr('y2', innerH + 14)
           .attr('stroke', color).attr('stroke-width', 1).attr('opacity', 0.5);
 
-        g.append('text')
+        const labelEl = g.append('text')
           .attr('class', `cp-label-${cp.id}`)
           .attr('transform', `translate(${x}, ${innerH + 18}) rotate(-55)`)
           .attr('fill', color)
           .attr('font-size', '9.5px')
           .attr('font-family', 'monospace')
           .attr('text-anchor', 'end')
-          .attr('dominant-baseline', 'auto')
-          .text(cp.name);
+          .attr('dominant-baseline', 'auto');
+        if (cp.id === 'combe_chevres') {
+          labelEl.append('tspan').attr('x', 0).attr('dy', '0').text('Combe du pas');
+          labelEl.append('tspan').attr('x', 0).attr('dy', '1.2em').text('de Chèvres');
+        } else {
+          labelEl.text(cp.name);
+        }
       }
 
       // Transition plateau marker — always rendered, opacity toggled by sim update effect

@@ -1,22 +1,24 @@
 'use client';
 
+import { useState } from 'react';
 import { useRaceStore } from '@/store/raceStore';
 
 export default function ConditionsToggle() {
-  const conditions = useRaceStore((s) => s.conditions);
+  const storeConditions = useRaceStore((s) => s.conditions);
   const setConditions = useRaceStore((s) => s.setConditions);
+  const [local, setLocal] = useState(storeConditions);
 
   const label =
-    conditions === 0
+    local === 0
       ? 'Normal conditions'
-      : conditions > 0
-      ? `+${conditions}% faster (firm snow / good grip)`
-      : `${conditions}% slower (deep snow / poor conditions)`;
+      : local > 0
+      ? `+${local}% faster (firm snow / good grip)`
+      : `${local}% slower (deep snow / poor conditions)`;
 
   const valueColor =
-    conditions > 15 ? 'var(--mountain-green)'
-    : conditions > 0 ? 'var(--glacier-400)'
-    : conditions < -15 ? 'var(--alpine-400)'
+    local > 15 ? 'var(--mountain-green)'
+    : local > 0 ? 'var(--glacier-400)'
+    : local < -15 ? 'var(--alpine-400)'
     : 'var(--stone-400)';
 
   return (
@@ -26,16 +28,17 @@ export default function ConditionsToggle() {
           Conditions
         </label>
         <span className="text-xs font-mono font-semibold" style={{ color: valueColor }}>
-          {conditions > 0 ? `+${conditions}` : conditions}%
+          {local > 0 ? `+${local}` : local}%
         </span>
       </div>
       <input
         type="range"
         min={-30}
         max={30}
-        step={5}
-        value={conditions}
-        onChange={(e) => setConditions(Number(e.target.value))}
+        step={1}
+        value={local}
+        onChange={(e) => setLocal(Number(e.target.value))}
+        onPointerUp={(e) => setConditions(Number((e.target as HTMLInputElement).value))}
         className="w-full cursor-pointer"
         style={{ accentColor: 'var(--glacier-400)' }}
       />

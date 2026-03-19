@@ -1,22 +1,24 @@
 'use client';
 
+import { useState } from 'react';
 import { useRaceStore } from '@/store/raceStore';
 
 export default function IntensitySlider() {
-  const intensity = useRaceStore((s) => s.intensity);
+  const storeIntensity = useRaceStore((s) => s.intensity);
   const setIntensity = useRaceStore((s) => s.setIntensity);
+  const [local, setLocal] = useState(storeIntensity);
 
   const label =
-    intensity === 0
+    local === 0
       ? 'Race pace (neutral)'
-      : intensity > 0
-      ? `+${intensity}% faster than training`
-      : `${intensity}% slower than training`;
+      : local > 0
+      ? `+${local}% faster than training`
+      : `${local}% slower than training`;
 
   const valueColor =
-    intensity > 20 ? 'var(--alpine-500)'
-    : intensity > 0 ? 'var(--sunset-gold)'
-    : intensity < -20 ? 'var(--glacier-400)'
+    local > 20 ? 'var(--alpine-500)'
+    : local > 0 ? 'var(--sunset-gold)'
+    : local < -20 ? 'var(--glacier-400)'
     : 'var(--mountain-green)';
 
   return (
@@ -26,16 +28,17 @@ export default function IntensitySlider() {
           Intensity
         </label>
         <span className="text-xs font-mono font-semibold" style={{ color: valueColor }}>
-          {intensity > 0 ? `+${intensity}` : intensity}%
+          {local > 0 ? `+${local}` : local}%
         </span>
       </div>
       <input
         type="range"
         min={-50}
         max={50}
-        step={5}
-        value={intensity}
-        onChange={(e) => setIntensity(Number(e.target.value))}
+        step={1}
+        value={local}
+        onChange={(e) => setLocal(Number(e.target.value))}
+        onPointerUp={(e) => setIntensity(Number((e.target as HTMLInputElement).value))}
         className="w-full cursor-pointer"
         style={{ accentColor: 'var(--glacier-400)' }}
       />

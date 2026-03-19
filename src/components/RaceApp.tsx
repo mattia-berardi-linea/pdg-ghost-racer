@@ -88,7 +88,7 @@ export default function RaceApp() {
         {/* Left column: map + elevation + table */}
         <div
           className="grid min-h-0"
-          style={{ gridTemplateRows: 'minmax(200px, 42vh) 12rem 1fr' }}
+          style={{ gridTemplateRows: 'minmax(200px, 32vh) 12rem 1fr' }}
         >
           {/* Map */}
           <div className="min-h-0 p-2 pb-0">
