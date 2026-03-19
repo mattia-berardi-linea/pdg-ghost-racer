@@ -9,28 +9,23 @@ export default function StartTimeSelector() {
   const [local, setLocal] = useState(storeStartTime);
 
   return (
-    <div className="space-y-1.5">
-      <label className="text-xs font-semibold uppercase tracking-wider block" style={{ color: 'var(--stone-400)' }}>
-        Start Time
-      </label>
-      <div className="flex items-center gap-2">
-        <input
-          type="time"
-          value={local}
-          onChange={(e) => setLocal(e.target.value)}
-          onBlur={(e) => {
-            setStartTime(e.target.value);
-            e.currentTarget.style.borderColor = 'var(--navy-700)';
-          }}
-          className="rounded px-2 py-1.5 text-white text-sm font-mono w-28 outline-none border"
-          style={{
-            background: 'var(--navy-800)',
-            borderColor: 'var(--navy-700)',
-          }}
-          onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--glacier-500)')}
-        />
-        <span className="text-xs" style={{ color: 'var(--stone-500)' }}>Wave start (default 22:45)</span>
-      </div>
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-xs" style={{ color: 'rgba(156,163,175,0.55)' }}>Wave start (default 22:45)</span>
+      <input
+        type="time"
+        value={local}
+        onChange={(e) => setLocal(e.target.value)}
+        onBlur={(e) => setStartTime(e.target.value)}
+        className="font-data rounded-xl px-3 py-1.5 text-white text-sm w-28 outline-none border transition-colors"
+        style={{
+          background: 'rgba(255,255,255,0.05)',
+          borderColor: 'rgba(255,255,255,0.1)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+        }}
+        onFocus={(e) => (e.currentTarget.style.borderColor = 'rgba(91,165,214,0.5)')}
+        onBlurCapture={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)')}
+      />
     </div>
   );
 }

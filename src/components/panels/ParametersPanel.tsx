@@ -19,7 +19,6 @@ function parseDurationInput(str: string): number | null {
     h = parseInt(parts[0], 10);
     m = parseInt(parts[1], 10);
   } else if (/^\d{3,4}$/.test(trimmed)) {
-    // 3 digits: XYZ → X:YZ, 4 digits: XYZW → XY:ZW
     h = parseInt(trimmed.slice(0, trimmed.length - 2), 10);
     m = parseInt(trimmed.slice(-2), 10);
   } else {
@@ -38,8 +37,17 @@ function formatDurationInput(ms: number): string {
   return `${h}:${String(m).padStart(2, '0')}`;
 }
 
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="text-xs font-semibold uppercase tracking-widest mb-3"
+      style={{ color: 'rgba(156,163,175,0.6)', letterSpacing: '0.1em' }}>
+      {children}
+    </div>
+  );
+}
+
 function Divider() {
-  return <div className="border-t" style={{ borderColor: 'var(--navy-700)' }} />;
+  return <div className="border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }} />;
 }
 
 export default function ParametersPanel() {
@@ -89,100 +97,164 @@ export default function ParametersPanel() {
   const displayMs = targetTotalMs ?? simulationResult?.totalDurationMs ?? null;
 
   return (
-    <div className="flex flex-col gap-5 h-full overflow-y-auto px-1">
+    <div className="flex flex-col h-full min-h-0">
 
-      {/* Summary card */}
-      <div
-        className="rounded-lg p-4 border"
-        style={{
-          background: 'linear-gradient(135deg, var(--navy-900), var(--navy-800))',
-          borderColor: 'rgba(91,165,214,0.25)',
-          boxShadow: '0 4px 24px rgba(91,165,214,0.08)',
-        }}
-      >
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--stone-400)' }}>
-            Estimated Finish
-          </span>
-          {simulationStatus === 'running' && (
-            <span className="text-xs animate-pulse" style={{ color: 'var(--stone-500)' }}>Updating…</span>
-          )}
-        </div>
+      {/* Summary card — sticky, never scrolls */}
+      <div className="flex-shrink-0 p-4">
+        <div
+          className="rounded-2xl p-4 relative overflow-hidden"
+          style={{
+            background: 'rgba(255,255,255,0.04)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '1px solid rgba(91,165,214,0.2)',
+            boxShadow: '0 4px 32px rgba(91,165,214,0.06), inset 0 1px 0 rgba(255,255,255,0.06)',
+          }}
+        >
+          {/* Subtle inner glow */}
+          <div className="absolute inset-0 rounded-2xl pointer-events-none"
+            style={{
+              background: 'radial-gradient(ellipse at 30% 0%, rgba(91,165,214,0.06) 0%, transparent 60%)',
+            }}
+          />
 
-        {simulationResult ? (
-          <div>
-            <div className="text-3xl font-bold font-mono text-white tracking-tight">
-              {simulationResult.finishClock}
-            </div>
-
-            {/* Editable total time */}
-            <div className="flex items-center gap-1.5 mt-1">
-              <span className="text-xs" style={{ color: 'var(--stone-500)' }}>Total:</span>
-              {editing ? (
-                <>
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => { setInputValue(e.target.value); setInputError(false); }}
-                    onKeyDown={(e) => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') cancelEdit(); }}
-                    onBlur={commitEdit}
-                    placeholder="H:MM"
-                    className="w-16 text-xs font-mono rounded px-1.5 py-0.5 outline-none border"
-                    style={{
-                      background: 'var(--navy-800)',
-                      borderColor: inputError ? 'var(--alpine-500)' : 'var(--glacier-500)',
-                      color: inputError ? 'var(--alpine-400)' : 'white',
-                    }}
-                  />
-                  <button onClick={cancelEdit} className="text-xs leading-none" style={{ color: 'var(--stone-500)' }}>✕</button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={startEditing}
-                    className="text-xs font-mono underline decoration-dashed underline-offset-2"
-                    style={{ color: 'var(--stone-300)' }}
-                    title="Click to set a target total time"
-                  >
-                    {displayMs ? formatDuration(displayMs) : '—'}
-                  </button>
-                  {targetTotalMs ? (
-                    <button onClick={clearTarget} className="text-xs leading-none ml-0.5 hover:opacity-80" style={{ color: 'var(--alpine-400)' }} title="Clear target">✕</button>
-                  ) : (
-                    <button onClick={startEditing} className="text-xs leading-none ml-0.5 opacity-40 hover:opacity-80" style={{ color: 'var(--glacier-400)' }} title="Set target time">✏</button>
-                  )}
-                </>
+          <div className="relative">
+            {/* Label row */}
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold uppercase tracking-widest"
+                style={{ color: 'rgba(156,163,175,0.6)', letterSpacing: '0.1em' }}>
+                Estimated Finish
+              </span>
+              {simulationStatus === 'running' && (
+                <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--glacier-400)' }}>
+                  <span className="w-1 h-1 rounded-full animate-pulse"
+                    style={{ background: 'var(--glacier-400)' }} />
+                  Updating…
+                </span>
               )}
             </div>
 
-            {targetTotalMs && (
-              <div className="text-xs mt-1.5 font-medium" style={{ color: 'var(--sunset-gold)' }}>
-                Target mode — checkpoint times adjusted
+            {simulationResult ? (
+              <div>
+                {/* Big finish clock */}
+                <div className="font-data text-4xl font-light tracking-tight text-white leading-none mb-2">
+                  {simulationResult.finishClock}
+                </div>
+
+                {/* Editable total time */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs" style={{ color: 'rgba(156,163,175,0.5)' }}>Total race time:</span>
+                  {editing ? (
+                    <>
+                      <input
+                        ref={inputRef}
+                        type="text"
+                        value={inputValue}
+                        onChange={(e) => { setInputValue(e.target.value); setInputError(false); }}
+                        onKeyDown={(e) => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') cancelEdit(); }}
+                        onBlur={commitEdit}
+                        placeholder="H:MM"
+                        className="w-16 text-xs font-data rounded-lg px-2 py-0.5 outline-none border"
+                        style={{
+                          background: 'rgba(255,255,255,0.06)',
+                          borderColor: inputError ? 'var(--alpine-500)' : 'var(--glacier-400)',
+                          color: inputError ? 'var(--alpine-400)' : 'white',
+                        }}
+                      />
+                      <button onClick={cancelEdit} className="text-xs leading-none opacity-50 hover:opacity-80 transition-opacity"
+                        style={{ color: 'var(--stone-400)' }}>✕</button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={startEditing}
+                        className="text-xs font-data underline decoration-dashed underline-offset-2 transition-colors hover:text-white"
+                        style={{ color: 'rgba(209,213,219,0.7)' }}
+                        title="Click to set a target total time"
+                      >
+                        {displayMs ? formatDuration(displayMs) : '—'}
+                      </button>
+                      {targetTotalMs ? (
+                        <button onClick={clearTarget}
+                          className="text-xs leading-none ml-0.5 opacity-60 hover:opacity-100 transition-opacity"
+                          style={{ color: 'var(--alpine-400)' }} title="Clear target">✕</button>
+                      ) : (
+                        <button onClick={startEditing}
+                          className="text-xs leading-none ml-0.5 opacity-30 hover:opacity-70 transition-opacity"
+                          style={{ color: 'var(--glacier-400)' }} title="Set target time">✏</button>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                {targetTotalMs && (
+                  <div className="mt-2 flex items-center gap-1.5">
+                    <div
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border"
+                      style={{
+                        background: 'rgba(251,191,36,0.1)',
+                        borderColor: 'rgba(251,191,36,0.25)',
+                        color: 'var(--sunset-gold)',
+                      }}
+                    >
+                      <span className="w-1 h-1 rounded-full" style={{ background: 'var(--sunset-gold)' }} />
+                      Target mode
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="font-data text-3xl font-light tracking-tight"
+                style={{ color: 'rgba(156,163,175,0.25)' }}>—:——</div>
+            )}
+
+            {normalizedProfile.activityCount > 0 && (
+              <div className="text-xs mt-3 flex items-center gap-1.5" style={{ color: 'rgba(126,185,224,0.7)' }}>
+                <span className="w-1 h-1 rounded-full" style={{ background: 'var(--glacier-400)' }} />
+                Profile from {normalizedProfile.activityCount} GPX file{normalizedProfile.activityCount > 1 ? 's' : ''}
               </div>
             )}
           </div>
-        ) : (
-          <div className="text-sm" style={{ color: 'var(--stone-500)' }}>—</div>
-        )}
-
-        {normalizedProfile.activityCount > 0 && (
-          <div className="text-xs mt-2" style={{ color: 'var(--glacier-400)' }}>
-            Profile from {normalizedProfile.activityCount} GPX file{normalizedProfile.activityCount > 1 ? 's' : ''}
-          </div>
-        )}
+        </div>
       </div>
 
-      <Divider />
-      <GpxDropzone />
-      <Divider />
-      <StartTimeSelector />
-      <Divider />
-      <IntensitySlider />
-      <Divider />
-      <ConditionsToggle />
-      <Divider />
-      <TransitionsManager />
+      {/* Sections — scrollable area below the card */}
+      <div className="flex-1 overflow-y-auto flex flex-col gap-0 px-4 pb-4">
+
+        <section className="py-4">
+          <SectionLabel>Training GPX</SectionLabel>
+          <GpxDropzone />
+        </section>
+
+        <Divider />
+
+        <section className="py-4">
+          <SectionLabel>Start Time</SectionLabel>
+          <StartTimeSelector />
+        </section>
+
+        <Divider />
+
+        <section className="py-4">
+          <SectionLabel>Race Intensity</SectionLabel>
+          <IntensitySlider />
+        </section>
+
+        <Divider />
+
+        <section className="py-4">
+          <SectionLabel>Snow Conditions</SectionLabel>
+          <ConditionsToggle />
+        </section>
+
+        <Divider />
+
+        <section className="py-4">
+          <SectionLabel>Pit Stop Times</SectionLabel>
+          <TransitionsManager />
+        </section>
+
+      </div>
     </div>
   );
 }

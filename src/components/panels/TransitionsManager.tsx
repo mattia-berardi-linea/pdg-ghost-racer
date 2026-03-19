@@ -16,48 +16,73 @@ export default function TransitionsManager() {
   const setTransition = useRaceStore((s) => s.setTransition);
 
   return (
-    <div className="space-y-1.5">
-      <label className="text-xs font-semibold uppercase tracking-wider block" style={{ color: 'var(--stone-400)' }}>
-        Pit Stop Times (min)
-      </label>
-      <div className="space-y-1.5">
-        {TRANSITION_CHECKPOINTS.map((cp) => (
-          <div key={cp.id} className="flex items-center justify-between gap-2">
+    <div className="space-y-2">
+      {TRANSITION_CHECKPOINTS.map((cp) => {
+        const val = transitions[cp.id] ?? 0;
+        const hasCutoff = cp.cutoffType !== 'none';
+        return (
+          <div key={cp.id}
+            className="flex items-center justify-between gap-2 rounded-xl px-3 py-2 border"
+            style={{
+              background: hasCutoff ? 'rgba(251,191,36,0.04)' : 'rgba(255,255,255,0.02)',
+              borderColor: hasCutoff ? 'rgba(251,191,36,0.12)' : 'rgba(255,255,255,0.06)',
+            }}
+          >
             <span
               className="text-xs truncate flex-1"
-              style={{ color: cp.cutoffType !== 'none' ? 'var(--sunset-gold)' : 'var(--stone-400)' }}
+              style={{ color: hasCutoff ? 'rgba(251,191,36,0.85)' : 'rgba(156,163,175,0.7)' }}
             >
               {cp.name}
               {cp.isExitCutoff && (
-                <span className="ml-1 text-xs" style={{ color: 'var(--alpine-400)' }}>(exit)</span>
+                <span className="ml-1.5 text-xs opacity-60" style={{ color: 'var(--alpine-400)' }}>exit</span>
               )}
             </span>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <button
-                onClick={() => setTransition(cp.id, Math.max(0, (transitions[cp.id] ?? 0) - 1))}
-                className="w-6 h-6 rounded flex items-center justify-center text-sm font-medium transition-colors"
-                style={{ background: 'var(--navy-800)', color: 'var(--stone-300)', border: '1px solid var(--navy-700)' }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--navy-700)')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--navy-800)')}
+                onClick={() => setTransition(cp.id, Math.max(0, val - 1))}
+                className="w-6 h-6 rounded-lg flex items-center justify-center text-sm font-medium transition-all border"
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  borderColor: 'rgba(255,255,255,0.1)',
+                  color: 'rgba(209,213,219,0.8)',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.1)';
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.04)';
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.1)';
+                }}
               >
                 −
               </button>
-              <span className="w-8 text-center text-sm font-mono text-white">
-                {transitions[cp.id] ?? 0}
+              <span className="w-7 text-center font-data text-sm font-medium text-white tabular-nums">
+                {val}
               </span>
               <button
-                onClick={() => setTransition(cp.id, (transitions[cp.id] ?? 0) + 1)}
-                className="w-6 h-6 rounded flex items-center justify-center text-sm font-medium transition-colors"
-                style={{ background: 'var(--navy-800)', color: 'var(--stone-300)', border: '1px solid var(--navy-700)' }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--navy-700)')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--navy-800)')}
+                onClick={() => setTransition(cp.id, val + 1)}
+                className="w-6 h-6 rounded-lg flex items-center justify-center text-sm font-medium transition-all border"
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  borderColor: 'rgba(255,255,255,0.1)',
+                  color: 'rgba(209,213,219,0.8)',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.1)';
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.04)';
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.1)';
+                }}
               >
                 +
               </button>
             </div>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 }

@@ -55,7 +55,7 @@ export const useRaceStore = create<RaceStore>((set) => ({
   intensity: 0,
   conditions: 0,
   transitions: buildDefaultTransitions(),
-  targetTotalMs: 12 * 3600 * 1000, // 12h default; overrides calculated total
+  targetTotalMs: null,
 
   // Placeholder speeds — replaced by reference calibration once course loads
   normalizedProfile: {
