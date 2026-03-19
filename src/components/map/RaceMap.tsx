@@ -26,6 +26,7 @@ export default function RaceMap() {
   const ghostMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const cpMarkersRef   = useRef<mapboxgl.Marker[]>([]);
   const [is3D, setIs3D] = useState(false);
+  const [isTopo, setIsTopo] = useState(false);
 
   const courseSegments   = useRaceStore((s) => s.courseSegments);
   const simulationResult = useRaceStore((s) => s.simulationResult);
@@ -212,6 +213,41 @@ export default function RaceMap() {
     setIs3D((prev) => !prev);
   }, [is3D]);
 
+  // ── 6. Toggle Swiss topo overlay ─────────────────────────────────────────
+  const toggleTopo = useCallback(() => {
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+
+    if (!isTopo) {
+      if (!map.getSource('swisstopo')) {
+        map.addSource('swisstopo', {
+          type: 'raster',
+          tiles: [
+            'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg',
+          ],
+          tileSize: 256,
+          attribution: '© swisstopo',
+          maxzoom: 18,
+        });
+      }
+      if (!map.getLayer('swisstopo-layer')) {
+        // Insert below course layers so the route stays on top
+        const beforeId = map.getLayer('course-glow') ? 'course-glow' : undefined;
+        map.addLayer({
+          id: 'swisstopo-layer',
+          type: 'raster',
+          source: 'swisstopo',
+          paint: { 'raster-opacity': 1.0 },
+        }, beforeId);
+      }
+    } else {
+      if (map.getLayer('swisstopo-layer')) map.removeLayer('swisstopo-layer');
+      if (map.getSource('swisstopo')) map.removeSource('swisstopo');
+    }
+
+    setIsTopo((prev) => !prev);
+  }, [isTopo]);
+
   return (
     <div className="relative w-full h-full rounded-lg overflow-hidden">
       {(!TOKEN || TOKEN === 'pk.YOUR_TOKEN_HERE') && (
@@ -228,21 +264,36 @@ export default function RaceMap() {
       )}
       <div ref={mapContainer} className="w-full h-full" />
 
-      {/* 3D terrain toggle */}
+      {/* Map control buttons */}
       {TOKEN && TOKEN !== 'pk.YOUR_TOKEN_HERE' && (
-        <button
-          onClick={toggle3D}
-          className="absolute bottom-8 left-3 text-xs font-bold rounded px-2.5 py-1 border transition-colors"
-          style={{
-            background: is3D ? 'rgba(91,165,214,0.25)' : 'rgba(15,31,53,0.85)',
-            borderColor: is3D ? 'rgba(91,165,214,0.6)' : 'rgba(91,165,214,0.25)',
-            color: is3D ? '#5ba5d6' : '#9ca3af',
-            backdropFilter: 'blur(4px)',
-          }}
-          title={is3D ? 'Switch to 2D' : 'Switch to 3D terrain'}
-        >
-          {is3D ? '2D' : '3D'}
-        </button>
+        <div className="absolute bottom-8 left-3 flex gap-1.5">
+          <button
+            onClick={toggle3D}
+            className="text-xs font-bold rounded px-2.5 py-1 border transition-colors"
+            style={{
+              background: is3D ? 'rgba(91,165,214,0.25)' : 'rgba(15,31,53,0.85)',
+              borderColor: is3D ? 'rgba(91,165,214,0.6)' : 'rgba(91,165,214,0.25)',
+              color: is3D ? '#5ba5d6' : '#9ca3af',
+              backdropFilter: 'blur(4px)',
+            }}
+            title={is3D ? 'Switch to 2D' : 'Switch to 3D terrain'}
+          >
+            {is3D ? '2D' : '3D'}
+          </button>
+          <button
+            onClick={toggleTopo}
+            className="text-xs font-bold rounded px-2.5 py-1 border transition-colors"
+            style={{
+              background: isTopo ? 'rgba(91,165,214,0.25)' : 'rgba(15,31,53,0.85)',
+              borderColor: isTopo ? 'rgba(91,165,214,0.6)' : 'rgba(91,165,214,0.25)',
+              color: isTopo ? '#5ba5d6' : '#9ca3af',
+              backdropFilter: 'blur(4px)',
+            }}
+            title={isTopo ? 'Hide Swiss topo' : 'Show Swiss topo (swisstopo)'}
+          >
+            Topo
+          </button>
+        </div>
       )}
     </div>
   );
