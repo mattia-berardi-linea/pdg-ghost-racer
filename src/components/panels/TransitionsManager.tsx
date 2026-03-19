@@ -3,7 +3,13 @@
 import { useRaceStore } from '@/store/raceStore';
 import { CHECKPOINTS } from '@/lib/constants';
 
-const TRANSITION_CHECKPOINTS = CHECKPOINTS.filter((cp) => cp.defaultTransitionMin > 0 || cp.cutoffType !== 'none');
+const ALWAYS_INCLUDE = new Set(['pas_du_chat', 'col_chaux']);
+const ALWAYS_EXCLUDE = new Set(['zermatt', 'verbier']);
+
+const TRANSITION_CHECKPOINTS = CHECKPOINTS.filter((cp) =>
+  !ALWAYS_EXCLUDE.has(cp.id) &&
+  (ALWAYS_INCLUDE.has(cp.id) || cp.defaultTransitionMin > 0 || cp.cutoffType !== 'none')
+);
 
 export default function TransitionsManager() {
   const transitions = useRaceStore((s) => s.transitions);
