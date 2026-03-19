@@ -9,11 +9,11 @@ import type { SimulationResult, NormalizedProfile, SlopeZone } from '@/types';
 
 /**
  * Scale factor applied to reference speeds when no GPX is uploaded.
- * Chosen so the default profile produces ~12h15m on the PdG course.
- * Full-field reference median ≈ 13h25m (805 min) → multiplier = 13.42 / 12.25 ≈ 1.096
- * (user is ~10% faster than the median Z2 finisher)
+ * Calibrated so the default profile produces ~12h total on the PdG course.
+ * Derived empirically: at 1.096 the simulator returns 14h42 (882 min);
+ * scaling linearly → 1.096 × (882−35)/(720−35) ≈ 1.355
  */
-const DEFAULT_MULTIPLIER = 1.096;
+const DEFAULT_MULTIPLIER = 1.355;
 
 const ZONES: SlopeZone[] = ['steep_climb', 'moderate_climb', 'flat', 'descent'];
 

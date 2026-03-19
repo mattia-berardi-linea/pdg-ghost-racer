@@ -35,69 +35,53 @@ export default function CheckpointTable() {
 
   return (
     <div className="w-full">
-      {/* Status bar */}
-      <div
-        className="flex items-center gap-4 px-3 py-2 border-b"
-        style={{ background: 'var(--navy-900)', borderColor: 'var(--navy-700)' }}
-      >
-        <h2 className="text-xs font-semibold uppercase tracking-wider flex-1" style={{ color: 'var(--stone-400)' }}>
-          Race vs Clock
-        </h2>
-        {simulationStatus === 'running' && (
-          <span className="text-xs animate-pulse" style={{ color: 'var(--glacier-400)' }}>Recalculating…</span>
-        )}
-        {dqCount > 0 && (
-          <span
-            className="text-xs rounded px-2 py-0.5 font-mono border"
-            style={{
-              background: 'rgba(214,79,61,0.15)',
-              color: 'var(--alpine-400)',
-              borderColor: 'rgba(214,79,61,0.3)',
-            }}
-          >
-            {dqCount} DQ
-          </span>
-        )}
-        {tightCount > 0 && dqCount === 0 && (
-          <span
-            className="text-xs rounded px-2 py-0.5 font-mono border"
-            style={{
-              background: 'rgba(251,191,36,0.12)',
-              color: 'var(--sunset-gold)',
-              borderColor: 'rgba(251,191,36,0.3)',
-            }}
-          >
-            {tightCount} tight
-          </span>
-        )}
-        {dqCount === 0 && tightCount === 0 && simulationResult && (
-          <span
-            className="text-xs rounded px-2 py-0.5 font-mono border"
-            style={{
-              background: 'rgba(74,222,128,0.1)',
-              color: 'var(--mountain-green)',
-              borderColor: 'rgba(74,222,128,0.25)',
-            }}
-          >
-            All clear
-          </span>
-        )}
-      </div>
-
-      <div className="overflow-x-auto">
         <table className="w-full text-sm border-collapse">
           <thead>
-            <tr
-              className="text-xs uppercase border-b"
-              style={{ borderColor: 'var(--navy-700)', background: 'rgba(26,41,66,0.5)' }}
-            >
-              {['Checkpoint', 'Arrival', 'Stop', 'Exit', 'Cut-off', 'Buffer'].map((h) => (
+            <tr className="text-xs uppercase">
+              {['Checkpoint', 'Arrival', 'Stop', 'Exit', 'Cut-off', 'Buffer'].map((h, i) => (
                 <th
                   key={h}
-                  className="text-left py-2 px-3 font-medium tracking-wider"
-                  style={{ color: 'var(--stone-400)' }}
+                  className="text-left py-2.5 px-3 font-semibold tracking-widest"
+                  style={{
+                    color: 'rgba(107,114,128,0.7)',
+                    fontSize: '0.65rem',
+                    letterSpacing: '0.08em',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 10,
+                    background: 'rgba(8,16,28,0.97)',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    borderBottom: '1px solid rgba(255,255,255,0.06)',
+                  }}
                 >
                   {h}
+                  {/* Status badge inline with Buffer column */}
+                  {i === 5 && (
+                    <span className="ml-2 align-middle">
+                      {simulationStatus === 'running' && (
+                        <span className="inline-flex items-center gap-1" style={{ color: 'var(--glacier-400)' }}>
+                          <span className="w-1 h-1 rounded-full animate-pulse" style={{ background: 'var(--glacier-400)' }} />
+                        </span>
+                      )}
+                      {dqCount > 0 && (
+                        <span className="font-data font-medium rounded-full px-1.5 py-0.5 border normal-case"
+                          style={{ background: 'rgba(214,79,61,0.12)', color: 'var(--alpine-400)', borderColor: 'rgba(214,79,61,0.25)' }}>
+                          {dqCount} DQ
+                        </span>
+                      )}
+                      {tightCount > 0 && dqCount === 0 && (
+                        <span className="font-data font-medium rounded-full px-1.5 py-0.5 border normal-case"
+                          style={{ background: 'rgba(251,191,36,0.1)', color: 'var(--sunset-gold)', borderColor: 'rgba(251,191,36,0.25)' }}>
+                          {tightCount} tight
+                        </span>
+                      )}
+                      {dqCount === 0 && tightCount === 0 && simulationResult && (
+                        <span className="w-1.5 h-1.5 rounded-full inline-block"
+                          style={{ background: 'var(--mountain-green)', boxShadow: '0 0 4px var(--mountain-green)' }} />
+                      )}
+                    </span>
+                  )}
                 </th>
               ))}
             </tr>
@@ -108,11 +92,9 @@ export default function CheckpointTable() {
             ))}
           </tbody>
         </table>
-      </div>
 
-      <div className="px-3 py-2 text-xs border-t" style={{ color: 'var(--stone-500)', borderColor: 'var(--navy-700)' }}>
-        Click a row to scrub to that checkpoint on the map and elevation profile.
-        Arolla [EXIT] = cut-off applies to departure time, not arrival.
+      <div className="px-3 py-2 text-xs border-t" style={{ color: 'rgba(107,114,128,0.45)', borderColor: 'rgba(255,255,255,0.05)' }}>
+        Click a row to scrub to that checkpoint · Arolla [EXIT] = cut-off on departure
       </div>
     </div>
   );
