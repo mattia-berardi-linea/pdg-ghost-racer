@@ -81,22 +81,27 @@ export default function RaceApp() {
       </header>
 
       {/* Main grid */}
-      <div className="flex-1 overflow-hidden grid" style={{ gridTemplateColumns: '1fr 288px', gridTemplateRows: '1fr' }}>
-
+      <div
+        className="flex-1 overflow-hidden grid"
+        style={{ gridTemplateColumns: '1fr clamp(288px, 22vw, 380px)', gridTemplateRows: '1fr' }}
+      >
         {/* Left column: map + elevation + table */}
-        <div className="flex flex-col">
+        <div
+          className="grid min-h-0"
+          style={{ gridTemplateRows: 'minmax(220px, 50vh) 12rem 1fr' }}
+        >
           {/* Map */}
-          <div className="flex-1 min-h-0 p-2 pb-0">
+          <div className="min-h-0 p-2 pb-0">
             <RaceMap />
           </div>
 
           {/* Elevation profile */}
-          <div className="h-48 flex-shrink-0 px-2 py-1 border-t" style={{ borderColor: 'var(--navy-700)' }}>
+          <div className="min-h-0 px-2 py-1 border-t" style={{ borderColor: 'var(--navy-700)' }}>
             <ElevationProfile />
           </div>
 
           {/* Checkpoint table */}
-          <div className="flex-shrink-0 border-t max-h-56 overflow-y-auto" style={{ borderColor: 'var(--navy-700)', background: 'var(--navy-900)' }}>
+          <div className="min-h-0 overflow-y-auto border-t" style={{ borderColor: 'var(--navy-700)', background: 'var(--navy-900)' }}>
             <CheckpointTable />
           </div>
         </div>
