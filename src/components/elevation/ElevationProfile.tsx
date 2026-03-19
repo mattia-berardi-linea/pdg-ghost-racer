@@ -4,7 +4,7 @@ import { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
 import { useRaceStore } from '@/store/raceStore';
 import { CHECKPOINTS } from '@/lib/constants';
-import { formatDuration } from '@/lib/timeUtils';
+import { formatDuration, formatClock } from '@/lib/timeUtils';
 import type { CourseSegment, SlopeZone } from '@/types';
 
 // The legend row is rendered as a plain div above the SVG.
@@ -218,12 +218,13 @@ export default function ElevationProfile() {
 
     // Tooltip
     const tooltip = g.append('g').attr('class','tooltip').style('display','none');
-    const ttRect = tooltip.append('rect').attr('x',6).attr('y',-28).attr('width',150).attr('height',54)
+    const ttRect = tooltip.append('rect').attr('x',6).attr('y',-28).attr('width',150).attr('height',68)
       .attr('fill','#0f1f35').attr('stroke','#253752').attr('rx',4).attr('opacity',0.97);
     const tt1 = tooltip.append('text').attr('x',12).attr('y',-12).attr('fill','#d1d5db').attr('font-size','11px').attr('font-family','monospace');
     const tt2 = tooltip.append('text').attr('x',12).attr('y', 4).attr('fill','#6b7280').attr('font-size','10px').attr('font-family','monospace');
     const tt3 = tooltip.append('text').attr('x',12).attr('y',18).attr('fill','#6b7280').attr('font-size','10px').attr('font-family','monospace');
-    const tt4 = tooltip.append('text').attr('x',12).attr('y',33).attr('font-size','10px').attr('font-family','monospace');
+    const tt4 = tooltip.append('text').attr('x',12).attr('y',32).attr('fill','#5ba5d6').attr('font-size','10px').attr('font-family','monospace');
+    const tt5 = tooltip.append('text').attr('x',12).attr('y',47).attr('font-size','10px').attr('font-family','monospace');
 
     // Invisible interaction overlay (covers chart area only, not label zone)
     g.append('rect')
@@ -240,6 +241,8 @@ export default function ElevationProfile() {
         const ele     = interpolateEle(courseSegments, distM);
         const ghPoint = simulationResult?.ghostTimeline.find((p) => p.cumulativeDistanceM >= distM);
         const elapsed = ghPoint ? formatDuration(ghPoint.elapsedMs) : '';
+        const startMs = simulationResult?.startMs ?? 0;
+        const clockTime = ghPoint ? formatClock(startMs + ghPoint.elapsedMs) : '';
         const zone    = getZoneAtDistance(courseSegments, distM);
 
         // Show checkpoint name when hovering within 10px of a checkpoint line
@@ -251,20 +254,21 @@ export default function ElevationProfile() {
 
         const tooltipX = clampedX > innerW * 0.75 ? clampedX - 162 : clampedX + 6;
         const hasName = !!nearCp;
-        ttRect.attr('height', hasName ? 70 : 54);
+        ttRect.attr('height', hasName ? 83 : 68);
         tooltip.style('display', null).attr('transform', `translate(${tooltipX},${Math.max(32, yScale(ele))})`);
         tt1.text(`${(distM / 1000).toFixed(1)}km  ${Math.round(ele)}m`);
         tt2.text(zone ? zone.replace(/_/g,' ') : '');
         tt3.text(elapsed ? `~${elapsed} elapsed` : '');
+        tt4.text(clockTime ? clockTime : '');
         if (nearCp) {
           const cpResult = simulationResult?.checkpointResults.find((r) => r.checkpoint.id === nearCp.id);
           const cpColor = !cpResult || cpResult.status === 'none' ? '#6b7280'
             : cpResult.isDQ ? '#e56b5a'
             : cpResult.status === 'tight' ? '#fbbf24'
             : '#4ade80';
-          tt4.text(nearCp.name).attr('fill', cpColor);
+          tt5.text(nearCp.name).attr('fill', cpColor);
         } else {
-          tt4.text('');
+          tt5.text('');
         }
       })
       .on('mouseleave', () => tooltip.style('display','none'));
