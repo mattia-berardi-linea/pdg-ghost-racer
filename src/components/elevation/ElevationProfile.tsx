@@ -216,8 +216,8 @@ export default function ElevationProfile() {
       .attr('stroke','#ffffff').attr('stroke-width', 1.5)
       .attr('stroke-dasharray','6,3').attr('opacity', 0.9);
 
-    // Tooltip
-    const tooltip = g.append('g').attr('class','tooltip').style('display','none');
+    // Tooltip — pointer-events:none so it never intercepts mouse events and triggers mouseleave
+    const tooltip = g.append('g').attr('class','tooltip').style('display','none').style('pointer-events','none');
     const ttRect = tooltip.append('rect').attr('x',6).attr('y',-28).attr('width',150).attr('height',68)
       .attr('fill','#0f1f35').attr('stroke','#253752').attr('rx',4).attr('opacity',0.97);
     const tt1 = tooltip.append('text').attr('x',12).attr('y',-12).attr('fill','#d1d5db').attr('font-size','11px').attr('font-family','monospace');
@@ -273,7 +273,21 @@ export default function ElevationProfile() {
       })
       .on('mouseleave', () => tooltip.style('display','none'));
 
-  }, [courseSegments, simulationResult, dimensions, scrubberDistanceM, setScrubberDistance]);
+  // scrubberDistanceM intentionally excluded — updated imperatively in mousemove
+  // and via a separate lightweight effect below to avoid full chart rebuilds on every move
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseSegments, simulationResult, dimensions, setScrubberDistance]);
+
+  // Lightweight scrubber-only update — avoids full chart rebuild on every mousemove
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg || !courseSegments || courseSegments.length === 0) return;
+    const totalDistM = courseSegments[courseSegments.length - 1].cumulativeDistanceM;
+    const innerW = dimensions.width - MARGIN.left - MARGIN.right;
+    const xScale = d3.scaleLinear().domain([0, totalDistM]).range([0, innerW]);
+    const x = xScale(scrubberDistanceM);
+    d3.select(svg).select('.scrubber-line').attr('x1', x).attr('x2', x);
+  }, [scrubberDistanceM, courseSegments, dimensions]);
 
   if (!courseSegments || courseSegments.length === 0) {
     return (
