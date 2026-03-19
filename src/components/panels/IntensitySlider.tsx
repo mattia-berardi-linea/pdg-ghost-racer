@@ -44,7 +44,7 @@ export default function IntensitySlider() {
       />
       <div className="flex justify-between text-xs" style={{ color: 'var(--stone-500)' }}>
         <span>-50% (easy)</span>
-        <span>0</span>
+        <button onClick={() => { setLocal(0); setIntensity(0); }} className="hover:opacity-100 opacity-60 underline decoration-dashed underline-offset-2 cursor-pointer">0</button>
         <span>+50% (max)</span>
       </div>
       <p className="text-xs" style={{ color: 'var(--stone-500)' }}>{label}</p>

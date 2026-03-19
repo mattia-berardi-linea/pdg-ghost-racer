@@ -44,7 +44,7 @@ export default function ConditionsToggle() {
       />
       <div className="flex justify-between text-xs" style={{ color: 'var(--stone-500)' }}>
         <span>-30% (bad)</span>
-        <span>0</span>
+        <button onClick={() => { setLocal(0); setConditions(0); }} className="hover:opacity-100 opacity-60 underline decoration-dashed underline-offset-2 cursor-pointer">0</button>
         <span>+30% (good)</span>
       </div>
       <p className="text-xs" style={{ color: 'var(--stone-500)' }}>{label}</p>

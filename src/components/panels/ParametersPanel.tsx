@@ -100,13 +100,16 @@ export default function ParametersPanel() {
           boxShadow: '0 4px 24px rgba(91,165,214,0.08)',
         }}
       >
-        <div className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--stone-400)' }}>
-          Estimated Finish
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--stone-400)' }}>
+            Estimated Finish
+          </span>
+          {simulationStatus === 'running' && (
+            <span className="text-xs animate-pulse" style={{ color: 'var(--stone-500)' }}>Updating…</span>
+          )}
         </div>
 
-        {simulationStatus === 'running' ? (
-          <div className="text-sm animate-pulse" style={{ color: 'var(--stone-500)' }}>Calculating…</div>
-        ) : simulationResult ? (
+        {simulationResult ? (
           <div>
             <div className="text-3xl font-bold font-mono text-white tracking-tight">
               {simulationResult.finishClock}
