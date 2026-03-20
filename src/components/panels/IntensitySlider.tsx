@@ -41,7 +41,7 @@ export default function IntensitySlider() {
       </div>
 
       {/* Slider + track */}
-      <div className="relative">
+      <div className="relative py-2">
         {/* Filled track */}
         <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 rounded-full pointer-events-none"
           style={{ background: 'rgba(255,255,255,0.07)' }} />
