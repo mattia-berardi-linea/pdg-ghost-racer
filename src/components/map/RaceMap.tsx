@@ -36,7 +36,7 @@ export default function RaceMap() {
   // ── 1. Initialize map ─────────────────────────────────────────────────────
   useEffect(() => {
     if (!mapContainer.current || mapRef.current) return;
-    if (!TOKEN || TOKEN === 'pk.YOUR_TOKEN_HERE') return;
+    if (!TOKEN || !/^pk\.[A-Za-z0-9._-]{40,}$/.test(TOKEN)) return;
 
     mapboxgl.accessToken = TOKEN;
 
@@ -250,7 +250,7 @@ export default function RaceMap() {
 
   return (
     <div className="relative w-full h-full rounded-lg overflow-hidden">
-      {(!TOKEN || TOKEN === 'pk.YOUR_TOKEN_HERE') && (
+      {(!TOKEN || !/^pk\.[A-Za-z0-9._-]{40,}$/.test(TOKEN)) && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10 text-center px-8">
           <div>
             <p className="text-amber-400 font-semibold text-lg mb-2">Mapbox token required</p>
@@ -265,7 +265,7 @@ export default function RaceMap() {
       <div ref={mapContainer} className="w-full h-full" />
 
       {/* Map control buttons */}
-      {TOKEN && TOKEN !== 'pk.YOUR_TOKEN_HERE' && (
+      {TOKEN && /^pk\.[A-Za-z0-9._-]{40,}$/.test(TOKEN) && (
         <div className="absolute bottom-8 left-3 flex gap-1.5">
           <button
             onClick={toggle3D}

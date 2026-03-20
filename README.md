@@ -167,4 +167,6 @@ This guarantees accurate inter-checkpoint proportions across all finishing speed
 
 <div align="center">
 Built for PDG 2026 · <a href="https://pdg-ghost-racer.vercel.app">Try it live</a>
+<br/>
+<sub>© 2026 <a href="https://linea-advisory.com">Linea Advisory</a></sub>
 </div>

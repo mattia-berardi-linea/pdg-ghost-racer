@@ -29,6 +29,10 @@ export function useCalculatorWorker() {
 
     worker.onerror = (err) => {
       console.error('[Worker] Unhandled error:', err);
+      // Reject all pending promises so the UI doesn't hang indefinitely
+      const errorResponse = { id: '', type: 'ERROR' as const, message: err.message || 'Worker crashed' };
+      pendingRef.current.forEach((resolve) => resolve(errorResponse));
+      pendingRef.current.clear();
     };
 
     workerRef.current = worker;

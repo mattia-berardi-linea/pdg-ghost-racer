@@ -255,6 +255,16 @@ export default function ParametersPanel() {
         </section>
 
       </div>
+
+      {/* Footer */}
+      <div
+        className="flex-shrink-0 px-4 py-2.5 text-center border-t"
+        style={{ borderColor: 'rgba(255,255,255,0.06)' }}
+      >
+        <span className="text-xs" style={{ color: 'rgba(107,114,128,0.5)' }}>
+          © 2026 Linea Advisory
+        </span>
+      </div>
     </div>
   );
 }
