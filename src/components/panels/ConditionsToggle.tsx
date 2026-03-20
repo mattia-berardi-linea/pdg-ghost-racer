@@ -45,13 +45,13 @@ export default function ConditionsToggle() {
           style={{ background: 'rgba(255,255,255,0.07)' }} />
         <div className="absolute top-1/2 -translate-y-1/2 h-1 rounded-full pointer-events-none"
           style={{
-            left: isPositive ? '50%' : `${pct}%`,
-            right: isPositive ? `${100 - pct}%` : '50%',
+            left: 0,
+            right: `${100 - pct}%`,
             background: isNeutral
               ? 'rgba(156,163,175,0.4)'
               : isPositive
-              ? 'linear-gradient(90deg, rgba(74,222,128,0.5), var(--mountain-green))'
-              : 'linear-gradient(90deg, var(--alpine-400), rgba(239,136,121,0.6))',
+              ? 'linear-gradient(90deg, rgba(74,222,128,0.3), var(--mountain-green))'
+              : 'linear-gradient(90deg, var(--alpine-400), rgba(239,136,121,0.5))',
           }}
         />
         <div className="absolute top-1/2 -translate-y-1/2 w-0.5 h-3 rounded-full pointer-events-none"
@@ -65,7 +65,7 @@ export default function ConditionsToggle() {
           onChange={(e) => setLocal(Number(e.target.value))}
           onPointerUp={(e) => setConditions(Number((e.target as HTMLInputElement).value))}
           className="relative w-full"
-          style={{ accentColor: 'var(--glacier-400)' }}
+          style={{ colorScheme: 'dark' }}
         />
       </div>
 

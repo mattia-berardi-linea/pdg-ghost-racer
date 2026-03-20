@@ -48,13 +48,13 @@ export default function IntensitySlider() {
         {/* Filled portion */}
         <div className="absolute top-1/2 -translate-y-1/2 h-1 rounded-full pointer-events-none"
           style={{
-            left: isPositive ? '50%' : `${pct}%`,
-            right: isPositive ? `${100 - pct}%` : '50%',
+            left: 0,
+            right: `${100 - pct}%`,
             background: isNeutral
               ? 'var(--mountain-green)'
               : isPositive
-              ? 'linear-gradient(90deg, rgba(251,191,36,0.6), var(--sunset-gold))'
-              : 'linear-gradient(90deg, var(--glacier-400), rgba(126,185,224,0.6))',
+              ? 'linear-gradient(90deg, rgba(251,191,36,0.4), var(--sunset-gold))'
+              : 'linear-gradient(90deg, var(--glacier-400), rgba(126,185,224,0.5))',
           }}
         />
         {/* Zero marker */}
@@ -69,7 +69,7 @@ export default function IntensitySlider() {
           onChange={(e) => setLocal(Number(e.target.value))}
           onPointerUp={(e) => setIntensity(Number((e.target as HTMLInputElement).value))}
           className="relative w-full"
-          style={{ accentColor: 'var(--glacier-400)' }}
+          style={{ colorScheme: 'dark' }}
         />
       </div>
 
