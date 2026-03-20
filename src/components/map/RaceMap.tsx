@@ -4,12 +4,25 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useRaceStore } from '@/store/raceStore';
-import { CHECKPOINTS, COURSE_BOUNDS } from '@/lib/constants';
+import { CHECKPOINTS, COURSE_BOUNDS, SUNRISE_CLOCK } from '@/lib/constants';
+import { resolveAbsoluteTimeMs } from '@/lib/timeUtils';
 import { segmentsToGeoJSON } from '@/lib/courseSegmenter';
 import type { CheckpointResult, GhostTimelinePoint } from '@/types';
 import { useMapSync } from '@/hooks/useMapSync';
 
 const TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? '';
+
+const SUN_SVG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="12" cy="12" r="5" fill="#fbbf24"/>
+  <line x1="12" y1="2" x2="12" y2="5" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+  <line x1="12" y1="19" x2="12" y2="22" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+  <line x1="2" y1="12" x2="5" y2="12" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+  <line x1="19" y1="12" x2="22" y2="12" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+  <line x1="4.93" y1="4.93" x2="7.05" y2="7.05" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+  <line x1="16.95" y1="16.95" x2="19.07" y2="19.07" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+  <line x1="19.07" y1="4.93" x2="16.95" y2="7.05" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+  <line x1="7.05" y1="16.95" x2="4.93" y2="19.07" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+</svg>`;
 
 function getStatusColor(status: CheckpointResult['status'] | 'none'): string {
   switch (status) {
@@ -23,8 +36,9 @@ function getStatusColor(status: CheckpointResult['status'] | 'none'): string {
 export default function RaceMap() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef       = useRef<mapboxgl.Map | null>(null);
-  const ghostMarkerRef = useRef<mapboxgl.Marker | null>(null);
-  const cpMarkersRef   = useRef<mapboxgl.Marker[]>([]);
+  const ghostMarkerRef   = useRef<mapboxgl.Marker | null>(null);
+  const sunriseMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const cpMarkersRef     = useRef<mapboxgl.Marker[]>([]);
   const [is3D, setIs3D] = useState(false);
   const [isTopo, setIsTopo] = useState(false);
 
@@ -71,6 +85,7 @@ export default function RaceMap() {
       map.remove();
       mapRef.current = null;
       ghostMarkerRef.current = null;
+      sunriseMarkerRef.current = null;
     };
   }, []);
 
@@ -174,7 +189,44 @@ export default function RaceMap() {
     syncToDistance(scrubberDistanceM);
   }, [scrubberDistanceM, simulationResult, syncToDistance]);
 
-  // ── 5. Toggle 3D terrain ──────────────────────────────────────────────────
+  // ── 5. Update sunrise marker position whenever simulation changes ─────────
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !simulationResult) {
+      sunriseMarkerRef.current?.remove();
+      sunriseMarkerRef.current = null;
+      return;
+    }
+
+    const { startMs, totalDurationMs, totalDistanceM, ghostTimeline, checkpointResults } = simulationResult;
+    const sunriseMs = resolveAbsoluteTimeMs(SUNRISE_CLOCK, startMs);
+
+    // Only show if sunrise falls within the race window
+    if (sunriseMs <= startMs || sunriseMs >= startMs + totalDurationMs) {
+      sunriseMarkerRef.current?.remove();
+      sunriseMarkerRef.current = null;
+      return;
+    }
+
+    const sunriseDistM = invertRegressionMs(sunriseMs, checkpointResults, startMs, totalDistanceM, totalDurationMs);
+    if (sunriseDistM === null) return;
+
+    const point = findNearestTimelinePoint(ghostTimeline, sunriseDistM);
+    if (!point) return;
+
+    if (!sunriseMarkerRef.current) {
+      const el = document.createElement('div');
+      el.style.cssText = 'width:24px;height:24px;pointer-events:none;filter:drop-shadow(0 0 5px rgba(251,191,36,0.9));';
+      el.innerHTML = SUN_SVG;
+      sunriseMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: 'center' })
+        .setLngLat([point.lon, point.lat])
+        .addTo(map);
+    } else {
+      sunriseMarkerRef.current.setLngLat([point.lon, point.lat]);
+    }
+  }, [simulationResult]);
+
+  // ── 6. Toggle 3D terrain ──────────────────────────────────────────────────
   const toggle3D = useCallback(() => {
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded()) return;
@@ -311,6 +363,38 @@ function findNearestTimelinePoint(
     else hi = mid;
   }
   return timeline[lo] ?? timeline[timeline.length - 1];
+}
+
+function invertRegressionMs(
+  targetMs: number,
+  checkpointResults: CheckpointResult[],
+  startMs: number,
+  totalDistM: number,
+  totalDurationMs: number,
+): number | null {
+  if (!checkpointResults.length) return null;
+
+  const anchors: { distM: number; ms: number }[] = [
+    { distM: 0, ms: startMs },
+    ...checkpointResults.map((r) => ({
+      distM: r.checkpoint.cumulativeDistanceKm * 1000,
+      ms: r.arrivalMs,
+    })),
+    { distM: totalDistM, ms: startMs + totalDurationMs },
+  ];
+
+  if (targetMs <= anchors[0].ms) return 0;
+  if (targetMs >= anchors[anchors.length - 1].ms) return totalDistM;
+
+  for (let i = 0; i < anchors.length - 1; i++) {
+    const a = anchors[i], b = anchors[i + 1];
+    if (targetMs >= a.ms && targetMs <= b.ms) {
+      const msSpan = b.ms - a.ms;
+      const t = msSpan > 0 ? (targetMs - a.ms) / msSpan : 0;
+      return a.distM + t * (b.distM - a.distM);
+    }
+  }
+  return null;
 }
 
 function buildPopupHTML(name: string, result?: CheckpointResult): string {

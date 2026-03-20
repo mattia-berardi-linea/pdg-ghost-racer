@@ -3,8 +3,8 @@
 import { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
 import { useRaceStore } from '@/store/raceStore';
-import { CHECKPOINTS } from '@/lib/constants';
-import { formatDuration, formatClock } from '@/lib/timeUtils';
+import { CHECKPOINTS, SUNRISE_CLOCK } from '@/lib/constants';
+import { formatDuration, formatClock, resolveAbsoluteTimeMs } from '@/lib/timeUtils';
 import type { CourseSegment, SlopeZone, CheckpointResult } from '@/types';
 
 // The legend row is rendered as a plain div above the SVG.
@@ -327,6 +327,60 @@ export default function ElevationProfile() {
     }
   }, [simulationResult, courseSegments]);
 
+  // Sunrise marker update — yellow dotted line + sun icon above chart
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg || !courseSegments || courseSegments.length === 0) return;
+
+    const g = d3.select(svg).select<SVGGElement>('g');
+    g.selectAll('.sunrise-group').remove();
+
+    if (!simulationResult) return;
+
+    const { startMs, checkpointResults, totalDurationMs, totalDistanceM } = simulationResult;
+    const sunriseMs = resolveAbsoluteTimeMs(SUNRISE_CLOCK, startMs);
+
+    // Only show if sunrise falls within the race window
+    if (sunriseMs <= startMs || sunriseMs >= startMs + totalDurationMs) return;
+
+    const sunriseDistM = invertRegressionMs(sunriseMs, checkpointResults, startMs, totalDistanceM, totalDurationMs);
+    if (sunriseDistM === null) return;
+
+    const innerW = dimensions.width - MARGIN.left - MARGIN.right;
+    const innerH = dimensions.height - MARGIN.top - MARGIN.bottom;
+    const xScale = d3.scaleLinear().domain([0, totalDistanceM]).range([0, innerW]);
+    const sx = xScale(sunriseDistM);
+
+    const sunG = g.append('g').attr('class', 'sunrise-group');
+
+    // Yellow dotted vertical line
+    sunG.append('line')
+      .attr('x1', sx).attr('x2', sx)
+      .attr('y1', 0).attr('y2', innerH - 5) // stop above zone strip
+      .attr('stroke', '#fbbf24').attr('stroke-width', 1.5)
+      .attr('stroke-dasharray', '4,3').attr('opacity', 0.7);
+
+    // Sun icon — circle + 8 rays, centered just above chart top
+    const cx = sx;
+    const cy = -10;
+    const r = 5;
+    const rayGap = 2;
+    const rayLen = 3.5;
+    for (let i = 0; i < 8; i++) {
+      const angle = (i * Math.PI * 2) / 8 - Math.PI / 2;
+      sunG.append('line')
+        .attr('x1', cx + Math.cos(angle) * (r + rayGap))
+        .attr('y1', cy + Math.sin(angle) * (r + rayGap))
+        .attr('x2', cx + Math.cos(angle) * (r + rayGap + rayLen))
+        .attr('y2', cy + Math.sin(angle) * (r + rayGap + rayLen))
+        .attr('stroke', '#fbbf24').attr('stroke-width', 1.5)
+        .attr('stroke-linecap', 'round').attr('opacity', 0.9);
+    }
+    sunG.append('circle')
+      .attr('cx', cx).attr('cy', cy).attr('r', r)
+      .attr('fill', '#fbbf24').attr('opacity', 0.95);
+  }, [simulationResult, courseSegments, dimensions]);
+
   if (!courseSegments || courseSegments.length === 0) {
     return (
       <div ref={containerRef} className="w-full h-full flex items-center justify-center text-sm" style={{ color: 'var(--stone-500)' }}>
@@ -399,6 +453,42 @@ function interpolateRegressionMs(
   }
 
   return anchors[anchors.length - 1].ms;
+}
+
+/**
+ * Inverse of interpolateRegressionMs: given a clock timestamp (ms), find the
+ * course distance (m) at which the team is expected to be at that time.
+ */
+function invertRegressionMs(
+  targetMs: number,
+  checkpointResults: CheckpointResult[],
+  startMs: number,
+  totalDistM: number,
+  totalDurationMs: number,
+): number | null {
+  if (!checkpointResults.length) return null;
+
+  const anchors: { distM: number; ms: number }[] = [
+    { distM: 0, ms: startMs },
+    ...checkpointResults.map((r) => ({
+      distM: r.checkpoint.cumulativeDistanceKm * 1000,
+      ms: r.arrivalMs,
+    })),
+    { distM: totalDistM, ms: startMs + totalDurationMs },
+  ];
+
+  if (targetMs <= anchors[0].ms) return 0;
+  if (targetMs >= anchors[anchors.length - 1].ms) return totalDistM;
+
+  for (let i = 0; i < anchors.length - 1; i++) {
+    const a = anchors[i], b = anchors[i + 1];
+    if (targetMs >= a.ms && targetMs <= b.ms) {
+      const msSpan = b.ms - a.ms;
+      const t = msSpan > 0 ? (targetMs - a.ms) / msSpan : 0;
+      return a.distM + t * (b.distM - a.distM);
+    }
+  }
+  return null;
 }
 
 function interpolateEle(segments: CourseSegment[], distM: number): number {
