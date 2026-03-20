@@ -39,10 +39,12 @@ export default function ConditionsToggle() {
         </span>
       </div>
 
-      {/* Slider + track */}
-      <div className="relative py-2">
+      {/* Slider */}
+      <div className="relative" style={{ height: '20px' }}>
+        {/* Background track */}
         <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 rounded-full pointer-events-none"
           style={{ background: 'rgba(255,255,255,0.07)' }} />
+        {/* Colored fill */}
         <div className="absolute top-1/2 -translate-y-1/2 h-1 rounded-full pointer-events-none"
           style={{
             left: 0,
@@ -54,8 +56,24 @@ export default function ConditionsToggle() {
               : 'linear-gradient(90deg, var(--alpine-400), rgba(239,136,121,0.5))',
           }}
         />
-        <div className="absolute top-1/2 -translate-y-1/2 w-0.5 h-3 rounded-full pointer-events-none"
-          style={{ left: '50%', transform: 'translateX(-50%) translateY(-50%)', background: 'rgba(255,255,255,0.2)' }} />
+        {/* Zero marker */}
+        <div className="absolute w-0.5 h-3 rounded-full pointer-events-none"
+          style={{ left: '50%', top: '50%', transform: 'translateX(-50%) translateY(-50%)', background: 'rgba(255,255,255,0.2)' }} />
+        {/* Custom thumb — positioned via pct so it always sits exactly on the line */}
+        <div
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            width: '16px',
+            height: '16px',
+            top: '50%',
+            left: `${pct}%`,
+            transform: 'translate(-50%, -50%)',
+            background: 'var(--glacier-400)',
+            boxShadow: '0 0 0 3px rgba(126, 185, 224, 0.2), 0 0 10px rgba(126, 185, 224, 0.35)',
+            zIndex: 1,
+          }}
+        />
+        {/* Native input — invisible, owns all drag/click interaction */}
         <input
           type="range"
           min={-30}
@@ -64,8 +82,8 @@ export default function ConditionsToggle() {
           value={local}
           onChange={(e) => setLocal(Number(e.target.value))}
           onPointerUp={(e) => setConditions(Number((e.target as HTMLInputElement).value))}
-          className="relative w-full"
-          style={{ colorScheme: 'dark' }}
+          className="absolute inset-0 w-full cursor-pointer"
+          style={{ opacity: 0, height: '100%' }}
         />
       </div>
 

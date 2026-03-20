@@ -102,16 +102,7 @@ input[type="range"]::-webkit-slider-thumb {
   appearance: none;
   width: 16px;
   height: 16px;
-  border-radius: 50%;
-  background: var(--glacier-400);
-  margin-top: -6px;
-  box-shadow: 0 0 0 3px rgba(126, 185, 224, 0.2), 0 0 10px rgba(126, 185, 224, 0.35);
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
-}
-
-input[type="range"]:hover::-webkit-slider-thumb {
-  box-shadow: 0 0 0 4px rgba(126, 185, 224, 0.3), 0 0 16px rgba(126, 185, 224, 0.5);
-  transform: scale(1.1);
+  /* Visual thumb is a custom div; native thumb kept same size for correct drag area */
 }
 
 input[type="range"]::-moz-range-track {
@@ -124,9 +115,6 @@ input[type="range"]::-moz-range-track {
 input[type="range"]::-moz-range-thumb {
   width: 16px;
   height: 16px;
-  border-radius: 50%;
-  background: var(--glacier-400);
   border: none;
-  box-shadow: 0 0 0 3px rgba(126, 185, 224, 0.2), 0 0 10px rgba(126, 185, 224, 0.35);
-  cursor: pointer;
+  /* Visual thumb is a custom div */
 }
