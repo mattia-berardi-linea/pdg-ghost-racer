@@ -80,12 +80,13 @@ body {
 
 /* ── Custom range slider ─────────────────────────────────────────────────── */
 input[type="range"] {
+  display: block; /* remove inline baseline quirk so input sits at padding-top of container */
   -webkit-appearance: none;
   appearance: none;
   background: transparent;
   cursor: pointer;
   width: 100%;
-  height: 4px; /* match track height — overlay sits exactly on the track center */
+  height: 4px;
   padding: 0;
   margin: 0;
 }
