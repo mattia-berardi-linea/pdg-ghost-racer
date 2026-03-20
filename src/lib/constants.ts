@@ -158,7 +158,7 @@ export const RACE_DATE_2026 = '2026-05-01'; // approximate, to be confirmed
 
 // Sunrise time for race day (April 18, Zermatt area, CEST)
 // Used to show where the team will be when the sun rises
-export const SUNRISE_CLOCK = '06:42';
+export const SUNRISE_CLOCK = '06:24';
 
 // Buffer thresholds for status coloring
 export const BUFFER_TIGHT_MIN = 30; // < 30min → tight (amber)
