@@ -1,0 +1,13 @@
+{
+  "name": "PDG Ghost Racer",
+  "short_name": "PDG Racer",
+  "description": "Patrouille des Glaciers 2026 — Race Strategy & Simulation Tool",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a1628",
+  "theme_color": "#0a1628",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/pdg-logo.png", "sizes": "any", "type": "image/png", "purpose": "any" }
+  ]
+}

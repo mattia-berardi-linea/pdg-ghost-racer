@@ -34,8 +34,8 @@ export default function CheckpointTable() {
   const tightCount = rows.filter((r) => r.status === 'tight').length;
 
   return (
-    <div className="w-full">
-        <table className="w-full text-sm border-collapse">
+    <div className="w-full overflow-x-auto">
+        <table className="w-full text-sm border-collapse" style={{ minWidth: '480px' }}>
           <thead>
             <tr className="text-xs uppercase">
               {['Checkpoint', 'Arrival', 'Stop', 'Exit', 'Cut-off', 'Buffer'].map((h, i) => (

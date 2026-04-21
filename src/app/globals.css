@@ -118,3 +118,7 @@ input[type="range"]::-moz-range-thumb {
   border: none;
   /* Visual thumb is a custom div */
 }
+
+/* ── Mobile / PWA ──────────────────────────────────────────────────────────── */
+/* Prevent iOS rubber-band scroll on the fixed app shell */
+html, body { overscroll-behavior: none; }
